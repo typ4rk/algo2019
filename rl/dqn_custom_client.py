@@ -105,14 +105,17 @@ class DQNCustomClient(DQNClient):
     # =========================================================== #
     def build_custom_model(self):
         model = Sequential()
+        # 레이어 쌓기 (노드의 개수: 32, relu: 활성함수, he_uniform: Weight 초기값)
         model.add(Dense(32, input_dim=self.state_size, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(32, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(self.action_size, activation='linear',
                         kernel_initializer='he_uniform'))
+        # 레이어 구성 & 로그작성
         model.summary()
-
+        
+        # Loss 함수 (learning_rate 지정 가능)
         model.compile(loss='mse', optimizer=Adam(lr=self.dqn_param.learning_rate))
 
         return model

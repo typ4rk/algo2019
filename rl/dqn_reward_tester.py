@@ -115,7 +115,7 @@ class DQNRewardTester():
                 print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
                 print("=========================================================")
 
-            time.sleep(0.1)
+            time.sleep(1.0)
             ##END OF LOOP
 
     def calc_sensing_data(self, car_next_state, car_current_state, backed_car_state, way_points, check_point_index):
