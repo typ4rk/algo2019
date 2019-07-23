@@ -11,7 +11,7 @@ class AirSimEnv(AirSimBaseEnv):
 
     @staticmethod
     def get_state_size():
-        return 6
+        return 7
 
     def get_current_state(self, car_state, car_prev_state, way_points, check_point, all_obstacles):
 
@@ -23,12 +23,30 @@ class AirSimEnv(AirSimBaseEnv):
         # 현재 주행 구간에서 10 개 각도
         forward_angle_arr = self.get_track_forward_angle(car_state, way_points, check_point)
 
-        forward_angle = round(abs(forward_angle_arr[2]), 2)
+        # forward_angle = round(abs(forward_angle_arr[2]), 2)
 
-        if forward_angle_arr[2] < 0:
-            forward_angle = forward_angle * -1
+        # if forward_angle_arr[2] < 0:
+        #     forward_angle = forward_angle * -1
 
-        state.append(forward_angle)
+        # state.append(forward_angle)
+        change_rate = []
+        for x in range(0, 9):
+            change_rate.append(abs(forward_angle_arr[x+1] - forward_angle_arr[x]))
+        
+        
+        max_change_value = max(change_rate)
+        max_change_index = change_rate.index(max_change_value)
+
+        #print(change_rate)
+        #print(max_change_index)
+        # print("index: {} (max: {})".format(max_change_index, max_change_value))
+
+        if forward_angle_arr[max_change_index + 1] - forward_angle_arr[max_change_index] < 0:
+            max_change_value = max_change_value * -1
+        #print("index: {} (max: {})".format(max_change_index, max_change_value))
+        state.append(max_change_index)
+        state.append(max_change_value)
+
         # ======
         # (2) Moving angle
         # ======

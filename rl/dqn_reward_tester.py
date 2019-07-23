@@ -16,10 +16,20 @@ class DQNRewardTester():
     # =========================================================== #
     # Reward function to test
     # =========================================================== #
-    def compute_reward(self, sensing_info):
+    def compute_reward(self, sensing_info, agent_current_state):
 
         thresh_dist = self.half_road_limit
         dist = abs(sensing_info.to_middle)
+
+        # sensing_info.collided
+        # sensing_info.speed
+
+        # sensing_info.moving_forward
+        # sensing_info.moving_angle
+        # sensing_info.lap_progress
+
+        # sensing_info.track_forward_angles
+        # sensing_info.track_forward_obstacles
 
         if dist > thresh_dist:
             reward = -1.0
@@ -91,28 +101,43 @@ class DQNRewardTester():
 
             agent_current_state = self.airsim_env.get_current_state(car_current_state, car_prev_state, self.way_points,
                                                                     check_point_index, self.all_obstacles)
-            print(agent_current_state)
+            
+            #print("[state]forward_angle: {}".format(agent_current_state[0]))  
+            print("[state]change_rate: index: {} (max: {})".format(agent_current_state[0], agent_current_state[1]))
+            print("[state]moving_angle: {}".format(agent_current_state[2]))
+            print("[state]dist: {}".format(agent_current_state[3]))
+            print("[state]speed: {}".format(agent_current_state[4]))
+            print("[state]obstacle: {}".format(agent_current_state[5]))            
+            #print(agent_current_state)
+
             # 보상 함수로 파라미터를 넘겨준다.
-            reward = self.compute_reward(sensing_info)
-            print("Reward value : {}".format(reward))
+            reward = self.compute_reward(sensing_info, agent_current_state)
+            print("[REWARD] value : {}".format(reward))
 
             if round(self.car_current_pos_x, 4) != round(self.car_next_pos_x, 4):
                 backed_car_state = car_current_state
             car_prev_state = car_current_state
 
             if is_debug:
-                print("=========================================================")
+                print("---------")
                 print("to middle: {}".format(sensing_info.to_middle))
 
-                print("collided: {}".format(sensing_info.collided))
-                print("car speed: {} km/h".format(sensing_info.speed))
-
-                print("is moving forward: {}".format(sensing_info.moving_forward))
-                print("moving angle: {}".format(sensing_info.moving_angle))
-                print("lap_progress: {}".format(sensing_info.lap_progress))
+                #print("collided: {}".format(sensing_info.collided))
+                #print("car speed: {} km/h".format(sensing_info.speed))
 
                 print("track_forward_angles: {}".format(sensing_info.track_forward_angles))
-                print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
+                #print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
+
+                #평균변화율
+                change_rate_angles = []
+                for x in range(1, 10):
+                    change_rate_angles.append(sensing_info.track_forward_angles[x] - sensing_info.track_forward_angles[x-1])
+                    #print("-change_rate: {}".format())
+                print("change_rate: {}".format(change_rate_angles))
+
+                #print("is moving forward: {}".format(sensing_info.moving_forward))
+                print("moving angle: {}".format(sensing_info.moving_angle))
+                #print("lap_progress: {}".format(sensing_info.lap_progress))
                 print("=========================================================")
 
             time.sleep(1.0)
