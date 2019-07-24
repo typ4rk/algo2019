@@ -1,5 +1,9 @@
 # algo2019 
 
+- 개별 브랜치에서 작업하여 강화학습 테스트를 합니다.
+- 개별 브랜치를 업로드 하여 변경사항을 공유합니다.
+- 학습이 성공적(!) 으로 이루어진 경우 (또는 공통 반영이 필요한 경우) master 브랜치에 머지 해 주세요.
+
 ## Todo
 
 - **dqn_custom_client.py 구현**
@@ -22,14 +26,14 @@
       - memory_size = 20000 (Replay memory 사이즈)
    
 - **airsim_env.py 구현**
-   - get_current_state(): Agent State (에이전트가 관찰하는 정보) 관련 추가 코드 구현
-      - way_points: 전방 10개의 정보(10 미터 기준) 
-      - forward_angle: 차량 전방의 도로가 휘어진 각도
-      - moving_angle: 주행 시 차량의 운행 각
-      - dist: 도로 중앙 차선으로부터 차량까지 직선거리(m)
-      - velocity: 현재 차량 속도
-      - o_dist: 도로 중앙 차선으로부터 장애물까지 직선거리(m)
-      - o_to_middle: 차량에서 장애물까지 남은 거리(m)
+   - get_current_state()
+      - way_points(10 미터) 기준 에이전트가 관찰하는 정보 6가지를 반환  
+         - forward_angle: 차량 전방의 도로가 휘어진 각도 (2번째 인덱스 값 반환됨)
+         - moving_angle: 주행 시 차량의 운행 각
+         - dist: 도로 중앙 차선으로부터 차량까지 직선거리(m)
+         - velocity: 현재 차량 속도
+         - o_to_middle: 도로 중앙 차선으로부터 장애물까지 직선거리(m)
+         - o_dist: 차량에서 장애물까지 남은 거리(m)
    
 ## Tutorial
 
