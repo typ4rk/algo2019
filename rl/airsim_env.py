@@ -18,7 +18,7 @@ class AirSimEnv(AirSimBaseEnv):
         state = []
 
         # ======
-        # (1) Forward angle
+        # (1,2) max changed-rate's index, value
         # ======
         # 현재 주행 구간에서 10 개 각도
         forward_angle_arr = self.get_track_forward_angle(car_state, way_points, check_point)
@@ -48,14 +48,14 @@ class AirSimEnv(AirSimBaseEnv):
         state.append(max_change_value)
 
         # ======
-        # (2) Moving angle
+        # (3) Moving angle
         # ======
         angle = self.get_moving_angle(car_prev_state, car_state, way_points, check_point)
 
         state.append(angle)
 
         # ======
-        # (3) Current distance from center(position)
+        # (4) Current distance from center(position)
         # ======
         dist = round(self.get_distance_from_center(car_state, way_points, check_point), 2)
 
@@ -67,13 +67,13 @@ class AirSimEnv(AirSimBaseEnv):
             state.append(dist * -1)
 
         # ======
-        # (4) Current velocity
+        # (5) Current velocity
         # ======
         velocity = self.get_speed(car_state)
         state.append(velocity)
 
         # ======
-        # (5, 6) Obstacle distance, to middle
+        # (6, 7) Obstacle distance, to middle
         # ======
         track_forward_obstacles = self.get_track_forward_obstacle(car_state, way_points, check_point, all_obstacles)
         if len(track_forward_obstacles) > 0:

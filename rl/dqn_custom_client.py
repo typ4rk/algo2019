@@ -17,7 +17,7 @@ training_duration = 0
 # model/weight load option
 # =========================================================== #
 model_load = False
-model_weight_path = "./save_model/.../dqn_weight_00.h5"
+model_weight_path = "./save_model/dqn_weight_980.h5"
 
 
 # ===========================================================
@@ -76,24 +76,70 @@ class DQNCustomClient(DQNClient):
         #
         thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
+        avoid_o_to_middle = 10
+        weight_dist_5 = 0.0
+        weight_dist_4 = 0.0
+        weight_dist_3 = 0.0
+        weight_dist_2 = 0.0
+        weight_dist_1 = 0.0
+        weight_dist_0 = 0.0
+        
+        # sensing_info:
+        # sensing_info.collided
+        # sensing_info.speed
+        # sensing_info.moving_forward
+        # sensing_info.moving_angle
+        # sensing_info.lap_progress
+        # sensing_info.track_forward_angles
+        # sensing_info.track_forward_obstacles
+
+        # 장애물을 발견한 경우, 중앙으로부터의 거리 차가 클수록 보상이 높다
+        if len(sensing_info.track_forward_obstacles) > 0:
+            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
+            if o_dist < 50:
+                avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
+
+        # 전방 주행각도 변화량 정보
+        change_rate_angles = []
+        for x in range(0, 9):
+            change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
+
+        max_change_value = max(change_rate_angles)
+        max_change_index = change_rate_angles.index(max_change_value)
+
+        # 커브각도가 15 이상인 코너링 구간에 근접한 경우
+        if max_change_value > 15:
+            # go inside!! (make: 1)
+            if max_change_index < 3:
+                weight_dist_1 = 0.2    
+            # go outside!! (make: 0.6)           
+            else:
+                weight_dist_4 = 0.
+                weight_dist_5 = -0.1
+                    
+        # # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
+        # if len(sensing_info.track_forward_angles) > 0:
+        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
 
         if dist > thresh_dist:
             reward = -1
         elif sensing_info.collided:
             reward = -1
+        elif avoid_o_to_middle < 2.5:
+            reward = -0.5   # -1 로 주면 frozen 원인인듯
         else:
             if dist > 5:
-                reward = 0.1
+                reward = 0.1 + weight_dist_5
             elif dist > 4:
-                reward = 0.2
+                reward = 0.2 + weight_dist_4
             elif dist > 3:
-                reward = 0.4
+                reward = 0.4 + weight_dist_3
             elif dist > 2:
-                reward = 0.6
+                reward = 0.6 + weight_dist_2
             elif dist > 1:
-                reward = 0.8
+                reward = 0.8 + weight_dist_1
             else:
-                reward = 1
+                reward = 1 + weight_dist_0
 
         #
         # Editing area ends

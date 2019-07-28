@@ -16,38 +16,82 @@ class DQNRewardTester():
     # =========================================================== #
     # Reward function to test
     # =========================================================== #
-    def compute_reward(self, sensing_info, agent_current_state):
+    def compute_reward(self, sensing_info):
 
         thresh_dist = self.half_road_limit
         dist = abs(sensing_info.to_middle)
+        
+        avoid_o_to_middle = 100
+        weight_dist_5 = 0.0
+        weight_dist_4 = 0.0
+        weight_dist_3 = 0.0
+        weight_dist_2 = 0.0
+        weight_dist_1 = 0.0
+        weight_dist_0 = 0.0
 
+        # sensing_info:
         # sensing_info.collided
         # sensing_info.speed
-
         # sensing_info.moving_forward
         # sensing_info.moving_angle
         # sensing_info.lap_progress
-
         # sensing_info.track_forward_angles
         # sensing_info.track_forward_obstacles
+        # ------------------------------------
+        # agent_current_state:
+        # (1) value of a max changed rate
+        # (2) index of a max changed rate
+        # (3) Moving angle
+        # (4) Current distance from center(position)
+        # (5) Current velocity
+        # (6, 7) Obstacle distance, to middle
+
+        # 장애물을 발견한 경우, 중앙으로부터의 거리 차가 클수록 보상이 높다
+        if len(sensing_info.track_forward_obstacles) > 0:
+            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
+            if o_dist < 50:
+                avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
+
+        # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
+        # if len(sensing_info.track_forward_angles) > 0:
+        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angle)
+
+        # 전방 주행각도 변화량 정보
+        change_rate_angles = []
+        for x in range(0, 9):
+            change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
+            
+        max_change_value = max(change_rate_angles)
+        max_change_index = change_rate_angles.index(max_change_value)
+
+        # 커브각도가 15 이상인 코너링 구간에 근접한 경우 
+        if max_change_value > 15:
+            if max_change_index < 3:
+                weight_dist_5 = 0.2
+                weight_dist_4 = 0.2
+            else:
+                weight_dist_2 = 0.2
+                weight_dist_1 = 0.2
 
         if dist > thresh_dist:
             reward = -1.0
         elif sensing_info.collided:
             reward = -1.0
+        elif avoid_o_to_middle < 2:
+            reward = -0.8
         else:
             if dist > 5:
-                reward = 0.1
+                reward = 0.1 + weight_dist_5
             elif dist > 4:
-                reward = 0.2
+                reward = 0.2 + weight_dist_4
             elif dist > 3:
-                reward = 0.4
+                reward = 0.4 + weight_dist_3
             elif dist > 2:
-                reward = 0.6
+                reward = 0.6 + weight_dist_2
             elif dist > 1:
-                reward = 0.8
+                reward = 0.8 + weight_dist_1
             else:
-                reward = 1
+                reward = 1.0
 
         return reward
 
@@ -107,11 +151,11 @@ class DQNRewardTester():
             print("[state]moving_angle: {}".format(agent_current_state[2]))
             print("[state]dist: {}".format(agent_current_state[3]))
             print("[state]speed: {}".format(agent_current_state[4]))
-            print("[state]obstacle: {}".format(agent_current_state[5]))            
+            print("[state]o_dist: {}, o_to_middle: {}".format(agent_current_state[5], agent_current_state[6]))            
             #print(agent_current_state)
 
             # 보상 함수로 파라미터를 넘겨준다.
-            reward = self.compute_reward(sensing_info, agent_current_state)
+            reward = self.compute_reward(sensing_info)
             print("[REWARD] value : {}".format(reward))
 
             if round(self.car_current_pos_x, 4) != round(self.car_next_pos_x, 4):
@@ -126,14 +170,38 @@ class DQNRewardTester():
                 #print("car speed: {} km/h".format(sensing_info.speed))
 
                 print("track_forward_angles: {}".format(sensing_info.track_forward_angles))
-                #print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
+                print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
 
-                #평균변화율
+                if len(sensing_info.track_forward_obstacles) > 0:
+                    o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
+                    if o_dist < 50:
+                        avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
+                        print("avoid_to_middle: {}". format(avoid_o_to_middle))
+
+                # if len(sensing_info.track_forward_angles) > 0:
+                #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angle)
+                #     print("diff_angles: {}". format(diff_angles))
+
+                # 전방 주행각도 변화량 정보
                 change_rate_angles = []
-                for x in range(1, 10):
-                    change_rate_angles.append(sensing_info.track_forward_angles[x] - sensing_info.track_forward_angles[x-1])
+                for x in range(0, 9):
+                    change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
                     #print("-change_rate: {}".format())
                 print("change_rate: {}".format(change_rate_angles))
+
+                max_change_value = max(change_rate_angles)
+                max_change_index = change_rate_angles.index(max_change_value)
+
+                if max_change_value > 15:
+                    if max_change_index < 3:
+                        weight_dist_2 = 0.2
+                        weight_dist_1 = 0.2
+                        print("max_change_index < 3: {}: go inside!!".format(max_change_index))
+                    else:
+                        weight_dist_5 = 0.2
+                        weight_dist_4 = 0.2
+                        print("max_change_index < else: {}: go outside!!".format(max_change_index))
+                    
 
                 #print("is moving forward: {}".format(sensing_info.moving_forward))
                 print("moving angle: {}".format(sensing_info.moving_angle))
