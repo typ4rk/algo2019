@@ -1,4 +1,4 @@
-# algo2019 
+﻿# algo2019 
 
 - 개별 브랜치에서 작업하여 강화학습 테스트를 합니다.
 - 개별 브랜치를 업로드 하여 변경사항을 공유합니다.
@@ -51,3 +51,17 @@
 ## 대회일정
 - 친선경기: 7/5 ~ 8/7
 - 본선경기: 8/8 ~ 8/22 (2 Tracks)
+
+## Tip
+- Git clone 오류 시 (Authentication failed)
+   ```
+   [http "https://github.com"]
+     proxy = 70.10.15.10:8080
+     sslVerify = false
+     cookieFile = C:/cookie.txt
+   ```
+
+- C:\cookie.txt 내용
+   ```
+   BCSI-CS-37fad1c9e918447e=1
+   ```
