@@ -1,4 +1,4 @@
-import setup_path
+﻿import setup_path
 import airsim
 import os
 import time
@@ -18,7 +18,7 @@ from abc import abstractmethod
 # =========================================================== #
 enable_api_control = True  # True(Api Control) /False(Key board control)
 is_debug = False
-current_clock_speed = 1
+current_clock_speed = 2
 
 # =========================================================== #
 
@@ -267,6 +267,7 @@ class DQNClient:
         current_episode = 0
         scores_per_episode = []
         frozen = 0
+        max_score = 0
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
@@ -324,7 +325,7 @@ class DQNClient:
             scores_per_episode.append(reward)
 
             if is_debug:
-                print("### cur_state", agent_current_state, ",action:", action, ",reward:", reward, ",next_stat:",
+                print("### cur_state", agent_current_state, ",action:", action, ",reward:", reward, "next_stat:",
                       agent_next_state, done)
 
             # 리플레이 메모리에 샘플 <s, a, r, s'> 저장
@@ -351,7 +352,11 @@ class DQNClient:
                 if len(episodes) % graph_x_width == 0:
                     pylab.clf()
 
+                if score > max_score:
+                    max_score = score
+
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
+                      " (max:", round(max_score,1), ")",
                       "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)

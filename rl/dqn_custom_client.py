@@ -16,9 +16,8 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = True
-model_weight_path = "./save_model/dqn_weight_T0729_220800.h5"
-
+model_load = False
+model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5"
 
 # ===========================================================
 
@@ -57,6 +56,8 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
+            dict(throttle=0.6, steering=0.3),
+            dict(throttle=0.6, steering=-0.3),
             dict(throttle=0.6, steering=0)
         ]
         #
@@ -112,9 +113,9 @@ class DQNCustomClient(DQNClient):
             # go inside!! (make: 1)
             if max_change_index < 3:
                 weight_dist_1 = 0.1
-                weight_dist_2 = -0.1
-                weight_dist_3 = -0.1
-                weight_dist_4 = -0.1
+                weight_dist_2 = -0.4
+                weight_dist_3 = -0.3
+                weight_dist_4 = -0.2
                 weight_dist_5 = -0.1    
             # go outside!! (make: 0.6)           
             # else:
@@ -144,7 +145,6 @@ class DQNCustomClient(DQNClient):
                 reward = 0.8 + weight_dist_1
             else:
                 reward = 1 + weight_dist_0
-        print("sensing_info.lap_progress: ",sensing_info.lap_progress)
         #
         # Editing area ends
         # ==========================================================#
