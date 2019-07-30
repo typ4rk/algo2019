@@ -16,7 +16,7 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = False
+model_load = True
 model_weight_path = "./save_model/dqn_weight_980.h5"
 
 
@@ -111,11 +111,15 @@ class DQNCustomClient(DQNClient):
         if max_change_value > 15:
             # go inside!! (make: 1)
             if max_change_index < 3:
-                weight_dist_1 = 0.2    
+                weight_dist_1 = 0.1
+                weight_dist_2 = -0.1
+                weight_dist_3 = -0.1
+                weight_dist_4 = -0.1
+                weight_dist_5 = -0.1    
             # go outside!! (make: 0.6)           
-            else:
-                weight_dist_4 = 0.
-                weight_dist_5 = -0.1
+            # else:
+            #     weight_dist_4 = 0.4
+            #     weight_dist_5 = -0.1
                     
         # # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
         # if len(sensing_info.track_forward_angles) > 0:
