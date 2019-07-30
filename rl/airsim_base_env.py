@@ -32,6 +32,9 @@ class AirSimBaseEnv:
             if len(item):
                 obstacle_points_revised.append(item)
 
+        if len(way_points_revised) == 188:
+            del way_points_revised[187]
+
         return np.array(way_points_revised), np.array(obstacle_points_revised)
 
     # ============================
@@ -66,7 +69,6 @@ class AirSimBaseEnv:
     # 단순 Full scan 으로 장애물 앞뒤 way point 그리고 way point 앞에서부터 거리, 장애물의 to middle 값을 리턴합니다. 주행중인 자동차에는 도로 이탈이 심하므로 사용못함
     # (binary search 를 사용 못했을때 값 계산이 틀리는 이유는 도로가 곡선이 많이 있기 때문에 두점의 직선거리의 절반 지점이, 인덱스의 절반이 아닌 경우가 많다.)
     # ============================
-
     def get_current_obstacle_info_full_scan(self, obstacle_point, way_points):
         last_index = len(way_points) - 1
         min_dist = 999999
@@ -140,32 +142,32 @@ class AirSimBaseEnv:
 
         ##윈도우 설정
         if check_point == False:
-            first, last = -1, 10
+            first, last = -2, 10
         else:
-            first = self.get_next_N_waypoint_index(check_point, -1, way_points)
+            first = self.get_next_N_waypoint_index(check_point, -2, way_points)
             last = self.get_next_N_waypoint_index(check_point, 10, way_points)
 
         # print("window:{},{}".format(first, last))
-        max_index = len(way_points) - 1
+        max_index = len(way_points)
         min_dist = 100000
         min_dist_idx = 0
 
         # 정상 케이스
         if first < last:
             for x in range(first, last):
-                calc_dist = np.linalg.norm(way_points[x] - car_pt)
+                calc_dist = LA.norm(way_points[x] - car_pt)
                 if min_dist > calc_dist:
                     min_dist = calc_dist
                     min_dist_idx = x
         else:
             for x in range(first, max_index):
-                calc_dist = np.linalg.norm(way_points[x] - car_pt)
+                calc_dist = LA.norm(way_points[x] - car_pt)
                 if min_dist > calc_dist:
                     min_dist = calc_dist
                     min_dist_idx = x
 
             for x in range(0, last):
-                calc_dist = np.linalg.norm(way_points[x] - car_pt)
+                calc_dist = LA.norm(way_points[x] - car_pt)
                 if min_dist > calc_dist:
                     min_dist = calc_dist
                     min_dist_idx = x
@@ -174,12 +176,22 @@ class AirSimBaseEnv:
         min_dist_prev_idx = self.get_next_N_waypoint_index(min_dist_idx, -1, way_points)
         min_dist_next_idx = self.get_next_N_waypoint_index(min_dist_idx, 1, way_points)
 
-        calc_dist_prev = np.linalg.norm(way_points[min_dist_prev_idx] - car_pt)
-        calc_dist_next = np.linalg.norm(way_points[min_dist_next_idx] - car_pt)
-        if calc_dist_prev < calc_dist_next:
-            return min_dist_prev_idx, min_dist_idx
+        dist_wp_prev = LA.norm(way_points[min_dist_idx] - way_points[min_dist_prev_idx])
+        dist_wp_next = LA.norm(way_points[min_dist_next_idx] - way_points[min_dist_idx])
+
+        calc_dist_prev = LA.norm(way_points[min_dist_prev_idx] - car_pt)
+        calc_dist_next = LA.norm(way_points[min_dist_next_idx] - car_pt)
+
+        if dist_wp_prev < 8 or dist_wp_next < 8 or dist_wp_prev > 12 or dist_wp_next > 12:
+            if calc_dist_prev * dist_wp_next < calc_dist_next * dist_wp_prev:
+                return min_dist_prev_idx, min_dist_idx
+            else:
+                return min_dist_idx, min_dist_next_idx
         else:
-            return min_dist_idx, min_dist_next_idx
+            if calc_dist_prev < calc_dist_next:
+                return min_dist_prev_idx, min_dist_idx
+            else:
+                return min_dist_idx, min_dist_next_idx
 
     # ============================
     # 자동차의 현재 속도를 알려줍니다.
@@ -319,6 +331,23 @@ class AirSimBaseEnv:
 
         return track_obstacles
 
+    def get_distance_to_way_points(self, car_state, way_points, check_point):
+        prev, next = self.get_current_way_points(car_state, way_points, check_point)
+        car_pt = self.get_point_of_car_state(car_state)
+
+        dist_arr = []
+        for x in range(0, 10):
+            wp_idx = self.get_next_N_waypoint_index(next, x, way_points)
+            dist = LA.norm(way_points[wp_idx] - car_pt)
+            dist = 0 if dist < 0 else dist
+            dist_arr.append(round(dist, 2))
+        return dist_arr
+
+    def get_point_of_car_state(self, car_state):
+        pd = car_state.kinematics_estimated.position
+        car_pt = np.array([pd.x_val, pd.y_val, 0])
+        return car_pt
+
     # privates
     def get_next_N_waypoint_index(self, current_index, n, way_points):
         next_index = current_index + n
@@ -329,6 +358,8 @@ class AirSimBaseEnv:
         elif next_index < 0:
             next_index = next_index + max_index + 1
         return next_index
+
+
 
     def nparray(self, state):
         return np.array([state.x_val, state.y_val, state.z_val])

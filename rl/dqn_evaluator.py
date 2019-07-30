@@ -1,4 +1,4 @@
-﻿import setup_path
+import setup_path
 import sys
 import time
 import math
@@ -11,7 +11,7 @@ from dqn_custom_client import DQNCustomClient
 # =========================================================== #
 model_weight_path = "./save_model/.../dqn_weight_00.h5"
 TRY_LIMIT = 3
-current_clock_speed = 5
+current_clock_speed = 1
 
 
 class DQNEvaluator(DQNCustomClient):
@@ -110,9 +110,10 @@ class DQNEvaluator(DQNCustomClient):
                 half_complete_flag = False
             elif progress >= 50:
                 half_complete_flag = True
-            if half_complete_flag and progress == 0:
+            if half_complete_flag and round(progress) == 0:
                 cur_lab = 2
-                progress = 50
+                progress = 50.0 + progress
+
             # print("current progress:{}".format(progress))
 
             if frozen:
@@ -152,6 +153,11 @@ class DQNEvaluator(DQNCustomClient):
 
                 check_point_index = 0
                 self.client.reset()
+                time.sleep(0.2)
+
+                car_current_state = self.client.getCarState(self.player_name)
+
+
                 self.frozen_count = 0
 
                 self.start_time = time.time()

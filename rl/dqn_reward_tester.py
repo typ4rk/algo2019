@@ -113,9 +113,10 @@ class DQNRewardTester():
 
                 print("track_forward_angles: {}".format(sensing_info.track_forward_angles))
                 print("track_forward_obstacles: {}".format(sensing_info.track_forward_obstacles))
+                print("distance_to_way_points: {}".format(sensing_info.distance_to_way_points))
                 print("=========================================================")
 
-            time.sleep(1.0)
+            time.sleep(0.1)
             ##END OF LOOP
 
     def calc_sensing_data(self, car_next_state, car_current_state, backed_car_state, way_points, check_point_index):
@@ -157,6 +158,8 @@ class DQNRewardTester():
                                                                                                self.way_points,
                                                                                                check_point_index,
                                                                                                self.all_obstacles)
+        self.sensing_info.distance_to_way_points = self.airsim_env.get_distance_to_way_points(car_next_state, self.way_points,
+                                                                              check_point_index)
         return self.sensing_info
 
 
@@ -174,7 +177,7 @@ class CarState:
     lap_progress = 0
     track_forward_angles = []
     track_forward_obstacles = []
-
+    distance_to_way_points = []
 
 if __name__ == "__main__":
     tester = DQNRewardTester()
