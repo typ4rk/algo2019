@@ -1,4 +1,4 @@
-﻿import setup_path
+import setup_path
 import airsim
 import os
 import time
@@ -18,7 +18,7 @@ from abc import abstractmethod
 # =========================================================== #
 enable_api_control = True  # True(Api Control) /False(Key board control)
 is_debug = False
-current_clock_speed = 5
+current_clock_speed = 1
 
 # =========================================================== #
 
@@ -153,6 +153,7 @@ class CarState:
     lap_progress = 0
     track_forward_angles = []
     track_forward_obstacles = []
+    distance_to_way_points = []
 
 
 class DQNClient:
@@ -244,6 +245,9 @@ class DQNClient:
                                                                                                self.way_points,
                                                                                                check_point_index,
                                                                                                self.all_obstacles)
+        self.sensing_info.distance_to_way_points = self.airsim_env.get_distance_to_way_points(car_next_state,
+                                                                                              self.way_points,
+                                                                                              check_point_index)
         return self.sensing_info
 
     def run(self, time_limit_hour):
@@ -298,9 +302,9 @@ class DQNClient:
                 half_complete_flag = False
             elif progress >= 50:
                 half_complete_flag = True
-            if half_complete_flag and progress == 0:
+            if half_complete_flag and round(progress) == 0:
                 cur_lab = 2
-                progress = 50
+                progress = 50.0 + progress
 
             # 센싱 데이터 계산
             sensing_info = self.calc_sensing_data(car_next_state, car_current_state, backed_car_state, self.way_points,
@@ -360,9 +364,12 @@ class DQNClient:
                 self.agent.update_target_model()
 
                 self.client.reset()
+                time.sleep(0.2)
                 # 리셋후 조금 주행을 시킨다.
                 self.make_initial_movement(self.car_controls, self.client)
                 # 변수들 초기화
+                car_next_state = self.client.getCarState(self.player_name)
+                backed_car_state = self.client.getCarState(self.player_name)
                 check_point_index = 0
                 scores_per_episode = []
                 cur_lab = 1

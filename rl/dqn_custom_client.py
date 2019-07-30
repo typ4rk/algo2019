@@ -17,7 +17,7 @@ training_duration = 0
 # model/weight load option
 # =========================================================== #
 model_load = True
-model_weight_path = "./save_model/dqn_weight_980.h5"
+model_weight_path = "./save_model/dqn_weight_T0729_220800.h5"
 
 
 # ===========================================================
@@ -121,7 +121,7 @@ class DQNCustomClient(DQNClient):
             #     weight_dist_4 = 0.4
             #     weight_dist_5 = -0.1
                     
-        # # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
+        # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
         # if len(sensing_info.track_forward_angles) > 0:
         #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
 
@@ -144,7 +144,7 @@ class DQNCustomClient(DQNClient):
                 reward = 0.8 + weight_dist_1
             else:
                 reward = 1 + weight_dist_0
-
+        print("sensing_info.lap_progress: ",sensing_info.lap_progress)
         #
         # Editing area ends
         # ==========================================================#
