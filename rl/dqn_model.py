@@ -269,7 +269,7 @@ class DQNClient:
         frozen = 0
         max_score = 0
         save_episode = 0
-        save_check_point_index = 0
+        save_lap_progress = 0
         
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
@@ -358,10 +358,10 @@ class DQNClient:
                 if score > max_score:
                     max_score = score
                     save_episode = current_episode
-                    save_check_point_index = check_point_index
+                    save_lap_progress = sensing_info.lap_progress
 
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
-                      " (max:", round(max_score,1), "/ episode:", save_episode, "/ check_point:", save_check_point_index, ")",
+                      " (max:", round(max_score,1), "/ episode:", save_episode, "/ lap_progress:", save_lap_progress, "%)",
                       "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)

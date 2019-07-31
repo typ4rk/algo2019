@@ -11,13 +11,14 @@ import sys
 # Training finish conditions (hour)
 # assign training duration by hour : 0(limit less), 1 (an hour), 1.5 (an hour and half) ...
 # =========================================================== #
-training_duration = 0
+training_duration = 2
 
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
 model_load = True
-model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5"
+#model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5"
+model_weight_path = "./save_model/dqn_weight_T0731_223532_speedmap.h5"
 
 # ===========================================================
 
