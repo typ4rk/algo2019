@@ -94,7 +94,7 @@ class DQNCustomClient(DQNClient):
                 reward = 0.8
             else:
                 reward = 1
-        print("sensing_info.lap_progress: ",sensing_info.lap_progress)
+        # print("sensing_info.lap_progress: ",sensing_info.lap_progress)
         #
         # Editing area ends
         # ==========================================================#

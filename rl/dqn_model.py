@@ -1,4 +1,4 @@
-import setup_path
+﻿import setup_path
 import airsim
 import os
 import time
@@ -27,11 +27,11 @@ current_clock_speed = 1
 class DQNAgent:
     def __init__(self, state_size, action_size, dqn_param):
 
-        # ?�태?� ?�동?? ?�기 ?�의
+        # ?�태?� ?�동?? ?�기 ?�의
         self.state_size = state_size
         self.action_size = action_size
 
-        # DQN ?�이?�파?��???
+        # DQN ?�이?�파?��???
         self.discount_factor = dqn_param.discount_factor
         self.learning_rate = dqn_param.learning_rate
         self.epsilon_decay = dqn_param.epsilon_decay
@@ -39,13 +39,13 @@ class DQNAgent:
         self.epsilon = dqn_param.epsilon
         self.batch_size = dqn_param.batch_size
         self.train_start = dqn_param.train_start
-        # 리플?�이 메모�?, 최�? ?�기 20000
+        # 리플?�이 메모�?, 최�? ?�기 20000
         self.memory = deque(maxlen=dqn_param.memory_size)
 
         self.model = self.build_model()
         self.target_model = self.build_model()
 
-        # ?��? 모델 초기??
+        # ?��? 모델 초기??
         self.update_target_model()
 
     def load_model(self, file_path):
@@ -54,7 +54,7 @@ class DQNAgent:
         else:
             self.model.load_weights(file_path)
 
-    # ?�태가 ?�력, ?�함?��? 출력?? ?�공?�경�? ?�성
+    # ?�태가 ?�력, ?�함?��? 출력?? ?�공?�경�? ?�성
     def build_model(self):
         model = Sequential()
         model.add(Dense(32, input_dim=self.state_size, activation='relu',
@@ -69,11 +69,11 @@ class DQNAgent:
 
         return model
 
-    # ?��? 모델?? 모델?? 가중치�? ?�데?�트
+    # ?��? 모델?? 모델?? 가중치�? ?�데?�트
     def update_target_model(self):
         self.target_model.set_weights(self.model.get_weights())
 
-    # ?�실�? ?�욕 ?�책?�로 ?�동 ?�택
+    # ?�실�? ?�욕 ?�책?�로 ?�동 ?�택
     def get_action(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
@@ -85,16 +85,16 @@ class DQNAgent:
         q_value = self.model.predict(state)
         return np.argmax(q_value[0])
 
-    # ?�플 <s, a, r, s'>?? 리플?�이 메모리에 ?�??
+    # ?�플 <s, a, r, s'>?? 리플?�이 메모리에 ?�??
     def append_sample(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    # 리플?�이 메모리에?? 무작?�로 추출?? 배치�? 모델 ?�습
+    # 리플?�이 메모리에?? 무작?�로 추출?? 배치�? 모델 ?�습
     def train_model(self):
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-        # 메모리에?? 배치 ?�기만큼 무작?�로 ?�플 추출
+        # 메모리에?? 배치 ?�기만큼 무작?�로 ?�플 추출
         mini_batch = random.sample(self.memory, self.batch_size)
 
         states = np.zeros((self.batch_size, self.state_size))
@@ -108,12 +108,12 @@ class DQNAgent:
             next_states[i] = mini_batch[i][3]
             dones.append(mini_batch[i][4])
 
-        # ?�재 ?�태?? ?�?? 모델?? ?�함??
-        # ?�음 ?�태?? ?�?? ?��? 모델?? ?�함??
+        # ?�재 ?�태?? ?�?? 모델?? ?�함??
+        # ?�음 ?�태?? ?�?? ?��? 모델?? ?�함??
         target = self.model.predict(states)
         target_val = self.target_model.predict(next_states)
 
-        # 벨만 최적 방정?�을 ?�용?? ?�데?�트 ?��?
+        # 벨만 최적 방정?�을 ?�용?? ?�데?�트 ?��?
         for i in range(self.batch_size):
             if dones[i]:
                 target[i][actions[i]] = rewards[i]
@@ -187,21 +187,21 @@ class DQNClient:
 
         self.action_size = len(self.action_space())
 
-        # DQN ?�이?�트 ?�성
+        # DQN ?�이?�트 ?�성
         self.agent = DQNAgent(self.state_size, self.action_size, dqn_param)
 
-        # running client id �? ?�더 ?�성
+        # running client id �? ?�더 ?�성
         now = time.localtime()
         self.run_cid = "T%02d%02d_%02d%02d%02d" % (now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec)
 
-        # ?�간 ?�성.
+        # ?�간 ?�성.
         self.start_time = time.time()
         self.end_time = 0
 
 
     @staticmethod
     def make_initial_movement(car_controls, client):
-        # 조금 주행?? ?�킨??.
+        # 조금 주행?? ?�킨??.
         car_controls.throttle = 1
         car_controls.steering = 0
         client.setCarControls(car_controls)
@@ -216,7 +216,7 @@ class DQNClient:
         self.sensing_info.moving_forward = self.airsim_env.is_moving_forward(car_current_state, car_next_state,
                                                                              way_points,
                                                                              check_point_index)
-        # ?��??? ?�는 ?�태?�서 각도�? 구할 ?? ?�으므�?, 좌표가 ?�랐?? 마�?�? ?�태�? 기억?�여 ?�다.
+        # ?��??? ?�는 ?�태?�서 각도�? 구할 ?? ?�으므�?, 좌표가 ?�랐?? 마�?�? ?�태�? 기억?�여 ?�다.
         self.car_current_pos_x = car_current_state.kinematics_estimated.position.x_val
         self.car_next_pos_x = car_next_state.kinematics_estimated.position.x_val
         if self.car_current_pos_x == self.car_next_pos_x:
@@ -256,7 +256,7 @@ class DQNClient:
         os.makedirs("./save_graph/" + str(self.run_cid))
 
         car_prev_state = self.client.getCarState(self.player_name)
-        # 조금 주행?? ?�킨??.
+        # 조금 주행?? ?�킨??.
         self.make_initial_movement(self.car_controls, self.client)
 
         check_point_index = 0
@@ -268,17 +268,17 @@ class DQNClient:
         scores_per_episode = []
         frozen = 0
         max_score = 0
-        score_updated = False
-        remember_episode = 0
-                
+        save_episode = 0
+        save_lap_progress = 0
+        
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
         finish = False
         time_limit_sec = time_limit_hour * 60 * 60
-        # while 루프?�작.
+        # while 루프?�작.
         while not finish:
-            # ?�재 ?�태 구성
+            # ?�재 ?�태 구성
             agent_current_state = self.airsim_env.get_current_state(car_current_state, car_prev_state, self.way_points,
                                                                     check_point_index, self.all_obstacles)
             # print(agent_current_state)
@@ -286,13 +286,13 @@ class DQNClient:
             check_point_index, _ = self.airsim_env.get_current_way_points(car_current_state, self.way_points,
                                                                           check_point_index)
 
-            # ?��??�이?�에 ?�어�? ?�는??(# ?�택?? ?�동?�로 ?�경?�서 ?? ?�?�스?? 진행)
+            # ?��??�이?�에 ?�어�? ?�는??(# ?�택?? ?�동?�로 ?�경?�서 ?? ?�?�스?? 진행)
             action = self.agent.get_action(agent_current_state)
             self.car_controls = self.interpret_action(action, self.car_controls)
             self.client.setCarControls(self.car_controls)
             time.sleep(self.control_interval)
 
-            # ?�음 ?�태
+            # ?�음 ?�태
             car_next_state = self.client.getCarState(self.player_name)
             check_point_index, _ = self.airsim_env.get_current_way_points(car_next_state, self.way_points,
                                                                           check_point_index)
@@ -310,16 +310,16 @@ class DQNClient:
                 cur_lab = 2
                 progress = 50.0 + progress
 
-            # ?�싱 ?�이?? 계산
+            # ?�싱 ?�이?? 계산
             sensing_info = self.calc_sensing_data(car_next_state, car_current_state, backed_car_state, self.way_points,
                                                   check_point_index, progress)
 
-            # 보상 ?�수�? ?�라미터�? ?�겨준??.
+            # 보상 ?�수�? ?�라미터�? ?�겨준??.
             reward = self.compute_reward(sensing_info)
 
 
-            # ?�기??  done ?� 보통?� ?�로 ?�하�? ?�탈?�서 ?�이?? 진행?�기 ?�려?? 경우.
-            # frozen ?��??�이?��? ?�답 ?�는 경우. 리셋.
+            # ?�기??  done ?� 보통?� ?�로 ?�하�? ?�탈?�서 ?�이?? 진행?�기 ?�려?? 경우.
+            # frozen ?��??�이?��? ?�답 ?�는 경우. 리셋.
             done, frozen = self.is_done(car_next_state, car_current_state, reward, progress, frozen)
 
             if progress >= 100:
@@ -331,22 +331,22 @@ class DQNClient:
                 print("### cur_state", agent_current_state, ",action:", action, ",reward:", reward, ",next_stat:",
                       agent_next_state, done)
 
-            # 리플?�이 메모리에 ?�플 <s, a, r, s'> ?�??
+            # 리플?�이 메모리에 ?�플 <s, a, r, s'> ?�??
             self.agent.append_sample(agent_current_state, action, reward, agent_next_state, done)
 
-            # �? ?�?�스?�마?? ?�습
+            # �? ?�?�스?�마?? ?�습
             if len(self.agent.memory) >= self.agent.train_start:
                 self.agent.train_model()
 
             if done:
 
-                # ?? ?�피?�드가 ?�남.
+                # ?? ?�피?�드가 ?�남.
                 score = np.sum(scores_per_episode)
                 episodes.append(current_episode)
 
                 scores.append(round(score, 2))
 
-                # 추이�? 보기 ?�해??
+                # 추이�? 보기 ?�해??
                 graph_x_width = 500
                 post_fix = math.floor((len(episodes) - 1) / graph_x_width)
                 graph_start = post_fix * graph_x_width
@@ -357,10 +357,11 @@ class DQNClient:
 
                 if score > max_score:
                     max_score = score
-                    score_updated = True
+                    save_episode = current_episode
+                    save_lap_progress = sensing_info.lap_progress # check_point_index
 
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
-                      " (max:", round(max_score,1), ", episode: ", remember_episode, ")",
+                      " (max:", round(max_score,1), "/ episode:", save_episode, "/ lap_progress:", save_lap_progress, "%)",
                       "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)
@@ -368,18 +369,15 @@ class DQNClient:
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
                         "./save_model/" + str(self.run_cid) + "/dqn_weight_" + str(current_episode) + ".h5")
-                    if score_updated == True:
-                        remember_episode = current_episode
-                        score_updated = False
                 
-                # 모델 ?�데?�트
+                # 모델 ?�데?�트
                 self.agent.update_target_model()
 
                 self.client.reset()
                 time.sleep(0.2)
-                # 리셋?? 조금 주행?? ?�킨??.
+                # 리셋?? 조금 주행?? ?�킨??.
                 self.make_initial_movement(self.car_controls, self.client)
-                # 변?�들 초기??
+                # 변?�들 초기??
                 car_next_state = self.client.getCarState(self.player_name)
                 backed_car_state = self.client.getCarState(self.player_name)
                 check_point_index = 0
@@ -420,7 +418,7 @@ class DQNClient:
     def override_model(self):
         self.agent.model = self.build_custom_model()
         self.agent.target_model = self.build_custom_model()
-        # ?��? 모델 초기??
+        # ?��? 모델 초기??
         self.agent.update_target_model()
 
     @abstractmethod
