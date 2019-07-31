@@ -16,7 +16,7 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = False
+model_load = True
 model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5"
 
 # ===========================================================
