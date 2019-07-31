@@ -268,9 +268,9 @@ class DQNClient:
         scores_per_episode = []
         frozen = 0
         max_score = 0
-        score_updated = False
-        remember_episode = 0
-                
+        save_episode = 0
+        save_check_point_index = 0
+        
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
@@ -357,10 +357,11 @@ class DQNClient:
 
                 if score > max_score:
                     max_score = score
-                    score_updated = True
+                    save_episode = current_episode
+                    save_check_point_index = check_point_index
 
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
-                      " (max:", round(max_score,1), ", episode: ", remember_episode, ")",
+                      " (max:", round(max_score,1), "/ episode:", save_episode, "/ check_point:", save_check_point_index, ")",
                       "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)
@@ -368,9 +369,6 @@ class DQNClient:
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
                         "./save_model/" + str(self.run_cid) + "/dqn_weight_" + str(current_episode) + ".h5")
-                    if score_updated == True:
-                        remember_episode = current_episode
-                        score_updated = False
                 
                 # 모델 업데이트
                 self.agent.update_target_model()
