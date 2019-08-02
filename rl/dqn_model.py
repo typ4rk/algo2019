@@ -267,10 +267,20 @@ class DQNClient:
         current_episode = 0
         scores_per_episode = []
         frozen = 0
+        
+        # 보상 최대값 저장
         max_score = 0
         save_episode = 0
+        save_mean = 0
         save_lap_progress = 0
-        
+
+        # 평균 보상값 저장 (lap_progress 거리 기준)
+        mean_per_progress = 0        
+        max_mean = 0
+        save_episode2 = 0
+        save_score = 0
+        save_lap_progress2 = 0
+
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
@@ -355,14 +365,29 @@ class DQNClient:
                 if len(episodes) % graph_x_width == 0:
                     pylab.clf()
 
+                # 거리 비례 평균 보상값 계산
+                if sensing_info.lap_progress > 0:
+                    mean_per_progress = round(score / sensing_info.lap_progress,1)
+
+                # 최대 보상값 저장                
                 if score > max_score:
                     max_score = score
                     save_episode = current_episode
+                    save_mean = mean_per_progress
                     save_lap_progress = sensing_info.lap_progress
+                
+                # 최대 평균보상값 저장
+                if mean_per_progress > max_mean and sening_info.lap_progress > 10:
+                    max_mean = mean_per_progress                    
+                    save_score = score
+                    save_episode2 = current_episode
+                    save_lap_progress2 = sensing_info.lap_progress
 
-                print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
-                      " (max:", round(max_score,1), "/ episode:", save_episode, "/ lap_progress:", save_lap_progress, "%)",
-                      "  memory length:",
+                print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", round(score,1),
+                    "[score]", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode, 
+                    " vs. ",
+                    " [mean]", round(save_score,1), "/", save_lap_progress2, "% (=", max_mean, "), episode:", save_episode2, 
+                    "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)
 

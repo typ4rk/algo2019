@@ -11,15 +11,32 @@ import sys
 # Training finish conditions (hour)
 # assign training duration by hour : 0(limit less), 1 (an hour), 1.5 (an hour and half) ...
 # =========================================================== #
-training_duration = 2
+training_duration = 0
 
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
 model_load = True
-#model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5"
-model_weight_path = "./save_model/dqn_weight_T0731_223532_speedmap.h5"
 
+# Try 1
+# model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5" 
+# episode: 257   score: 115.5 [score] 389.4 / 39.25 % (= 9.9 ), episode: 126  vs.   [mean] 21.8 / 1.08 % (= 20.2 ), episode: 23
+
+# Try 2
+# model_weight_path = "./save_model/dqn_weight_T0802_095719_30_maxmean.h5"  
+# episode: 167   score: 41.7 [score] 261.3 / 27.15 % (= 9.6 ), episode: 111  vs.   [mean] 12.3 / 0.54 % (= 22.8 ), episode: 14
+
+# Try 3
+# model_weight_path = "./save_model/dqn_weight_T0802_113202_20_maxmean.h5"
+# episode: 446   score: 97.6 [score] 220.4 / 25.0 % (= 8.8 ), episode: 166  vs.   [mean] 9.7 / 0.54 % (= 18.0 ), episode: 265
+
+# Try 4
+# model_weight_path = "./save_model/dqn_weight_T0802_122022_270_maxmean.h5"
+# episode: 476   score: 22.8 [score] 60.7 / 5.38 % (= 11.3 ), episode: 200  vs.   [mean] 40.4 / 2.42 % (= 16.7 ), episode: 27
+
+# Try 5
+# model_weight_path = "./save_model/dqn_weight_T0802_170422_30_maxmean.h5"
+# episode: 409   score: 179.4 [score] 286.2 / 33.6 % (= 8.5 ), episode: 408  vs.   [mean] 6.0 / 0.27 % (= 22.2 ), episode: 25
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
