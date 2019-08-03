@@ -377,19 +377,17 @@ class DQNClient:
                     save_lap_progress = sensing_info.lap_progress
                 
                 # 최대 평균보상값 저장
-                if mean_per_progress > max_mean and sening_info.lap_progress > 10:
+                if mean_per_progress > max_mean and sensing_info.lap_progress > 10:
                     max_mean = mean_per_progress                    
                     save_score = score
                     save_episode2 = current_episode
                     save_lap_progress2 = sensing_info.lap_progress
 
-                print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", round(score,1),
-                    "[score]", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode, 
-                    " vs. ",
-                    " [mean]", round(save_score,1), "/", save_lap_progress2, "% (=", max_mean, "), episode:", save_episode2, 
-                    "  memory length:",
-                      len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
-                      check_point_index)
+                print("episode:", current_episode, " score:", round(score,1), " check point reached:", check_point_index,
+                    " lap:", sensing_info.lap_progress,
+                    "[score]", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode)
+                    #" vs. ",
+                    #"[mean]", round(save_score,1), "/", save_lap_progress2, "% (=", max_mean, "), episode:", save_episode2)
 
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(

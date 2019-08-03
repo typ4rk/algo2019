@@ -9,7 +9,10 @@ from dqn_custom_client import DQNCustomClient
 # =========================================================== #
 # Global Configurations
 # =========================================================== #
-model_weight_path = "./save_model/.../dqn_weight_00.h5"
+# model_weight_path = "./save_model/.../dqn_weight_00.h5"
+model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
+# [2] the evaluation result -  completed !!, progress :100 % , estimated lap time: 4 mins. 8.63 secs
+
 TRY_LIMIT = 3
 current_clock_speed = 1
 

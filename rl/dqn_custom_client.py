@@ -20,23 +20,30 @@ model_load = True
 
 # Try 1
 # model_weight_path = "./save_model/dqn_weight_T0731_184922_speedmap.h5" 
-# episode: 257   score: 115.5 [score] 389.4 / 39.25 % (= 9.9 ), episode: 126  vs.   [mean] 21.8 / 1.08 % (= 20.2 ), episode: 23
+# episode: 2011   score: 27.7 [score] 351.5 / 50.54 % (= 7.0 ), episode: 757  vs.   [mean] 128.3 / 11.83 % (= 10.8 ), episode: 1321 
 
 # Try 2
-# model_weight_path = "./save_model/dqn_weight_T0802_095719_30_maxmean.h5"  
-# episode: 167   score: 41.7 [score] 261.3 / 27.15 % (= 9.6 ), episode: 111  vs.   [mean] 12.3 / 0.54 % (= 22.8 ), episode: 14
+# model_weight_path = "./save_model/dqn_weight_T0802_210338_140_maxmean.h5" 
+# episode: 544   score: 11.0 [score] 235.6 / 23.92 % (= 9.8 ), episode: 529  vs.   [mean] 192.6 / 18.01 % (= 10.7 ), episode: 508
 
 # Try 3
-# model_weight_path = "./save_model/dqn_weight_T0802_113202_20_maxmean.h5"
-# episode: 446   score: 97.6 [score] 220.4 / 25.0 % (= 8.8 ), episode: 166  vs.   [mean] 9.7 / 0.54 % (= 18.0 ), episode: 265
+# model_weight_path = "./save_model/dqn_weight_T0803_081857_510_maxmean.h5" 
+# episode: 191   score: 289.1 [score] 1360.6 / 100.0 % (= 13.6 ), episode: 160  vs.   [mean] 218.4 / 13.98 % (= 15.6 ), episode: 158
 
 # Try 4
-# model_weight_path = "./save_model/dqn_weight_T0802_122022_270_maxmean.h5"
-# episode: 476   score: 22.8 [score] 60.7 / 5.38 % (= 11.3 ), episode: 200  vs.   [mean] 40.4 / 2.42 % (= 16.7 ), episode: 27
+# model_weight_path = "./save_model/dqn_weight_T0803_120804_160_maxscore_pass_finishline.h5" 
+# episode: 123   score: 460.0 [score] 1731.1 / 100.0 % (= 17.3 ), episode: 86  vs.   [mean] 198.3 / 11.02 % (= 18.0 ), episode: 113
 
 # Try 5
-# model_weight_path = "./save_model/dqn_weight_T0802_170422_30_maxmean.h5"
-# episode: 409   score: 179.4 [score] 286.2 / 33.6 % (= 8.5 ), episode: 408  vs.   [mean] 6.0 / 0.27 % (= 22.2 ), episode: 25
+# model_weight_path = "./save_model/dqn_weight_T0803_140052_90_maxscore_pass_finishline.h5"
+# episode: 175   score: 179.1 [score] 1828.4 / 100.0 % (= 18.3 ), episode: 149  vs.   [mean] 1015.2 / 54.84 % (= 18.5 ), episode: 174
+
+# Try 6
+# model_weight_path = "./save_model/dqn_weight_T0803_180759_150_maxscore_pass_finishline.h5"
+# episode: 216   score: 195.5 [score] 1692.7 / 100.0 % (= 16.9 ), episode: 193  vs.   [mean] 195.5 / 10.75 % (= 18.2 ), episode: 216
+
+# Next..
+model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
@@ -129,7 +136,7 @@ class DQNCustomClient(DQNClient):
         # 커브각도가 15 이상인 코너링 구간에 근접한 경우
         if max_change_value > 15:
             # go inside!! (make: 1)
-            if max_change_index < 3:
+            if max_change_index < 4 and max_change_index > 0:
                 weight_dist_1 = 0.1
                 weight_dist_2 = -0.4
                 weight_dist_3 = -0.3
