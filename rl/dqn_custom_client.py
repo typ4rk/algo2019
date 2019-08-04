@@ -57,7 +57,7 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
-            dict(throttle=0.6, steering=0)
+            dict(throttle=0.8, steering=0)
         ]
         #
         # Editing area ends
@@ -85,7 +85,7 @@ class DQNCustomClient(DQNClient):
         if tfo:
             max_dist_to_o = 3.0
             o_dist, o_center_dist = tfo[0]
-            if o_dist < 30:
+            if o_dist < 60:
                 o_reward_value = 0.0
                 if o_center_dist < 0:
                     best = o_center_dist + 1.0 + 1.40
@@ -155,7 +155,7 @@ class DQNCustomClient(DQNClient):
 
         reward = speed_reward_value * dist_reward_value * angle_reward_value - (1.0 if fc else 0.0)
 
-        print(f"sensing_info.lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
