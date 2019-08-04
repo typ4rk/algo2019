@@ -88,7 +88,7 @@ class DQNCustomClient(DQNClient):
             if o_dist < 30:
                 o_reward_value = 0.0
                 if o_center_dist < 0:
-                    best = o_center_dist + 1.0 + 1.25
+                    best = o_center_dist + 1.0 + 1.40
                     abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
                     if best <= dist:
                         o_reward_value = 1.0 - abs_diff/max_dist_to_o
@@ -96,7 +96,7 @@ class DQNCustomClient(DQNClient):
                         o_reward_value = -0.5 * abs_diff/max_dist_to_o
 
                 else:
-                    best = o_center_dist - 1.0 - 1.25
+                    best = o_center_dist - 1.0 - 1.40
                     abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
                     if dist <= best:
                         o_reward_value = 1.0 - abs_diff/max_dist_to_o
@@ -123,19 +123,20 @@ class DQNCustomClient(DQNClient):
             tfa_differences.append(tfa[i - 1] - tfa[i])
             i = i + 1
 
+        thresh_angle = 20
+
         max_diff_angle = max(tfa_differences)
         max_angle_dist = tfa_differences.index(max_diff_angle)
         max_angle = tfa[max_angle_dist];
-        curve_speed_constant = 1.0
 
         if max_angle_dist == 0:
             reward_value = 1.0
         elif 1 <= max_angle_dist < 3:
-            reward_value = ma/max_angle if ma/max_angle <= 1.0 else 1.0
+            reward_value = 1.0 - (max_angle - ma)/thresh_angle
         else:
-            reward_value = (max_angle-ma)/max_angle
+            reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
 
-        return reward_value
+        return abs(reward_value)
 
     # =========================================================== #
     # Reward Function
@@ -148,11 +149,11 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         fc = self.failure_condition(sensing_info)
-        speed_reward_value = self.calc_speed_reward_value(sensing_info) * 0.1
-        dist_reward_value = self.calc_dist_reward_value(sensing_info) * 0.6
-        angle_reward_value = self.calc_angle_reward_value(sensing_info) * 0.3
+        speed_reward_value = self.calc_speed_reward_value(sensing_info)
+        dist_reward_value = self.calc_dist_reward_value(sensing_info)
+        angle_reward_value = self.calc_angle_reward_value(sensing_info)
 
-        reward = speed_reward_value + dist_reward_value + angle_reward_value - (1.0 if fc else 0.0)
+        reward = speed_reward_value * dist_reward_value * angle_reward_value - (1.0 if fc else 0.0)
 
         print(f"sensing_info.lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} = {reward:0.3f}")
         #
