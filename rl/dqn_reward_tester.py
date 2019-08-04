@@ -18,17 +18,16 @@ class DQNRewardTester():
     # =========================================================== #
     def compute_reward(self, sensing_info):
 
-        thresh_dist = self.half_road_limit
+        # =========================================================== #
+        # Area for writing code
+        # =========================================================== #
+        # Editing area starts from here
+        #
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
-        
-        avoid_o_to_middle = 100
-        weight_dist_5 = 0.0
-        weight_dist_4 = 0.0
-        weight_dist_3 = 0.0
-        weight_dist_2 = 0.0
-        weight_dist_1 = 0.0
-        weight_dist_0 = 0.0
 
+        avoid_o_to_middle = 10
+        
         # sensing_info:
         # sensing_info.collided
         # sensing_info.speed
@@ -37,62 +36,73 @@ class DQNRewardTester():
         # sensing_info.lap_progress
         # sensing_info.track_forward_angles
         # sensing_info.track_forward_obstacles
-        # ------------------------------------
-        # agent_current_state:
-        # (1) value of a max changed rate
-        # (2) index of a max changed rate
-        # (3) Moving angle
-        # (4) Current distance from center(position)
-        # (5) Current velocity
-        # (6, 7) Obstacle distance, to middle
 
-        # ?�애물을 발견?? 경우, 중앙?�로부?�의 거리 차�? ?�수�? 보상?? ?�다
+        # 장애물을 발견한 경우, 중앙으로부터의 거리 차가 클수록 보상이 높다
         if len(sensing_info.track_forward_obstacles) > 0:
             o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
             if o_dist < 50:
                 avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
 
-        # ?�랙?? 각도?� 차량?? 각도 차이가 ?�을?�록 보상?? ?�다
-        # if len(sensing_info.track_forward_angles) > 0:
-        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angle)
-
-        # ?�방 주행각도 변?�량 ?�보
+        # 전방 주행각도 변화량 정보
         change_rate_angles = []
         for x in range(0, 9):
             change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
-            
+
         max_change_value = max(change_rate_angles)
         max_change_index = change_rate_angles.index(max_change_value)
 
-        # 커브각도가 15 ?�상?? 코너�? 구간?? 근접?? 경우 
+        up_speed = False
+        down_speed = False
+        up_speed_reward = 0
+        down_speed_reward = 0
+
+        # 커브각도가 15 이상인 코너링 구간에 근접한 경우
         if max_change_value > 15:
-            if max_change_index < 3:
-                weight_dist_5 = 0.2
-                weight_dist_4 = 0.2
-            else:
-                weight_dist_2 = 0.2
-                weight_dist_1 = 0.2
+            # go inside!! (make: 1)
+            if max_change_index < 4 and max_change_index > 0:
+                # weight_dist_1 = 0.9
+                # weight_dist_2 = 0.2
+                # weight_dist_3 = 0.2
+                # weight_dist_4 = 0.1
+                # weight_dist_5 = 0.1
+                down_speed = True
+        else:
+            up_speed = True
+
+        if up_speed == True and sensing_info.speed > 40:
+            up_speed_reward = 0.2
+        elif down_speed == True and sensing_info.speed < 30:
+            down_speed_reward = 0.2
+                            
+        # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
+        # if len(sensing_info.track_forward_angles) > 0:
+        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
 
         if dist > thresh_dist:
-            reward = -1.0
+            reward = -1
         elif sensing_info.collided:
-            reward = -1.0
-        elif avoid_o_to_middle < 2:
-            reward = -0.8
+            reward = -1
+        elif avoid_o_to_middle < 2.5:
+            reward = -0.5   # -1 로 주면 frozen 원인인듯
+        # elif max_change_value < 15 and sensing_info.speed > 40:
+        #     reward = 0.8        
         else:
             if dist > 5:
-                reward = 0.1 + weight_dist_5
+                reward = 0.1 + up_speed_reward
             elif dist > 4:
-                reward = 0.2 + weight_dist_4
+                reward = 0.2 + up_speed_reward
             elif dist > 3:
-                reward = 0.4 + weight_dist_3
+                reward = 0.4 + up_speed_reward
             elif dist > 2:
-                reward = 0.6 + weight_dist_2
+                reward = 0.6 + up_speed_reward
             elif dist > 1:
-                reward = 0.8 + weight_dist_1
+                reward = 0.8 + down_speed_reward + up_speed_reward
             else:
-                reward = 1.0
+                reward = 1 + down_speed_reward + up_speed_reward
 
+        #
+        # Editing area ends
+        # ==========================================================#
         return reward
 
     def __init__(self):
@@ -146,13 +156,13 @@ class DQNRewardTester():
             agent_current_state = self.airsim_env.get_current_state(car_current_state, car_prev_state, self.way_points,
                                                                     check_point_index, self.all_obstacles)
             
-            #print("[state]forward_angle: {}".format(agent_current_state[0]))  
-            print("[state]change_rate: index: {} (max: {})".format(agent_current_state[0], agent_current_state[1]))
-            print("[state]moving_angle: {}".format(agent_current_state[2]))
-            print("[state]dist: {}".format(agent_current_state[3]))
-            print("[state]speed: {}".format(agent_current_state[4]))
-            print("[state]o_dist: {}, o_to_middle: {}".format(agent_current_state[5], agent_current_state[6]))            
-            #print(agent_current_state)
+            # #print("[state]forward_angle: {}".format(agent_current_state[0]))  
+            # print("[state]change_rate: index: {} (max: {})".format(agent_current_state[0], agent_current_state[1]))
+            # print("[state]moving_angle: {}".format(agent_current_state[2]))
+            # print("[state]dist: {}".format(agent_current_state[3]))
+            # print("[state]speed: {}".format(agent_current_state[4]))
+            # print("[state]o_dist: {}, o_to_middle: {}".format(agent_current_state[5], agent_current_state[6]))            
+            # #print(agent_current_state)
 
             # 보상 ?�수�? ?�라미터�? ?�겨준??.
             reward = self.compute_reward(sensing_info)
@@ -166,10 +176,10 @@ class DQNRewardTester():
                 print("---------")
                 print("to middle: {}".format(sensing_info.to_middle))
 
-                print("collided: {}".format(sensing_info.collided))
+                #print("collided: {}".format(sensing_info.collided))
                 print("car speed: {} km/h".format(sensing_info.speed))
 
-                print("is moving forward: {}".format(sensing_info.moving_forward))
+                #print("is moving forward: {}".format(sensing_info.moving_forward))
                 print("moving angle: {}".format(sensing_info.moving_angle))
                 print("lap_progress: {}".format(sensing_info.lap_progress))
 
@@ -187,27 +197,41 @@ class DQNRewardTester():
                 #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angle)
                 #     print("diff_angles: {}". format(diff_angles))
 
+                up_speed = True
+                up_speed_reward = 0
+                down_speed_reward = 0
+
                 # ?�방 주행각도 변?�량 ?�보
                 change_rate_angles = []
                 for x in range(0, 9):
-                    change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
+                    change_value = abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x])
+                    change_rate_angles.append(change_value)
+                    if x < 3 and change_value > 15:
+                        up_speed = False
+
                     #print("-change_rate: {}".format())
                 print("change_rate: {}".format(change_rate_angles))
 
                 max_change_value = max(change_rate_angles)
                 max_change_index = change_rate_angles.index(max_change_value)
-
+        
+                # 커브각도가 15 이상인 코너링 구간에 근접한 경우
                 if max_change_value > 15:
-                    if max_change_index < 3:
-                        weight_dist_2 = 0.2
-                        weight_dist_1 = 0.2
-                        print("max_change_index < 3: {}: go inside!!".format(max_change_index))
-                    else:
-                        weight_dist_5 = 0.2
-                        weight_dist_4 = 0.2
-                        print("max_change_index < else: {}: go outside!!".format(max_change_index))
-                    
+                    if max_change_index < 4 and max_change_index > 0:
+                        up_speed = False                        
 
+                if up_speed == True:
+                    print("up_speed !!")
+                else:
+                    print("down_speed !!")
+
+                if up_speed == True and sensing_info.speed > 40:
+                    up_speed_reward = 0.2
+                    print("[EXTRA REWARD]: +0.2 (all), speed: {}".format(sensing_info.speed))
+                elif up_speed == False and sensing_info.speed < 30:
+                    down_speed_reward = 0.2
+                    print("[EXTRA REWARD]: +0.2 (only dist < 1), speed: {}".format(sensing_info.speed))
+                    
                 #print("is moving forward: {}".format(sensing_info.moving_forward))
                 print("moving angle: {}".format(sensing_info.moving_angle))
                 #print("lap_progress: {}".format(sensing_info.lap_progress))
