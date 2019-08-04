@@ -10,12 +10,17 @@ from dqn_custom_client import DQNCustomClient
 # Global Configurations
 # =========================================================== #
 # model_weight_path = "./save_model/.../dqn_weight_00.h5"
-model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
+
+# Success
+# model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
 # [2] the evaluation result -  completed !!, progress :100 % , estimated lap time: 4 mins. 8.63 secs
+
+# Fail
+# model_weight_path = "./save_model/dqn_weight_T0804_094245_420_throttle_test_pass_finishline.h5"
+# model_weight_path = "./save_model/dqn_weight_T0804_150602_630_throttle_test_pass_finishline.h5"
 
 TRY_LIMIT = 3
 current_clock_speed = 1
-
 
 class DQNEvaluator(DQNCustomClient):
 

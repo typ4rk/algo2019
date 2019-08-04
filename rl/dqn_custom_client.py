@@ -23,27 +23,25 @@ model_load = True
 # episode: 2011   score: 27.7 [score] 351.5 / 50.54 % (= 7.0 ), episode: 757  vs.   [mean] 128.3 / 11.83 % (= 10.8 ), episode: 1321 
 
 # Try 2
-# model_weight_path = "./save_model/dqn_weight_T0802_210338_140_maxmean.h5" 
-# episode: 544   score: 11.0 [score] 235.6 / 23.92 % (= 9.8 ), episode: 529  vs.   [mean] 192.6 / 18.01 % (= 10.7 ), episode: 508
+# model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
+# episode: 251  score: 110.9  check point reached: 17  lap: 4.84 [score] episode: 129 178.5 / 4.57 % (= 39.1 )
 
 # Try 3
-# model_weight_path = "./save_model/dqn_weight_T0803_081857_510_maxmean.h5" 
-# episode: 191   score: 289.1 [score] 1360.6 / 100.0 % (= 13.6 ), episode: 160  vs.   [mean] 218.4 / 13.98 % (= 15.6 ), episode: 158
+# model_weight_path = "./save_model/dqn_weight_T0804_004604_130_throttle_test.h5"
+# episode: 1146  score: 135.2  check point reached: 27  lap: 7.26 [score]  1425.9 / 100.0 % (= 14.3 ), episode: 759
 
 # Try 4
-# model_weight_path = "./save_model/dqn_weight_T0803_120804_160_maxscore_pass_finishline.h5" 
-# episode: 123   score: 460.0 [score] 1731.1 / 100.0 % (= 17.3 ), episode: 86  vs.   [mean] 198.3 / 11.02 % (= 18.0 ), episode: 113
+# model_weight_path = "./save_model/dqn_weight_T0804_013106_760_throttle_test_pass_finishline.h5"
+# episode: 321  score: 83.9  check point reached: 17  lap: 4.84 [score]  1214.3 / 80.38 % (= 15.1 ), episode: 300
 
 # Try 5
-# model_weight_path = "./save_model/dqn_weight_T0803_140052_90_maxscore_pass_finishline.h5"
-# episode: 175   score: 179.1 [score] 1828.4 / 100.0 % (= 18.3 ), episode: 149  vs.   [mean] 1015.2 / 54.84 % (= 18.5 ), episode: 174
+# model_weight_path = "./save_model/dqn_weight_T0804_082415_300_throttle_test_p80.h5"
+# episode: 715  score: 193.1  check point reached: 39  lap: 10.75 [score]  2260.8 / 100.0 % (= 22.6 ), episode: 419
 
-# Try 6
-# model_weight_path = "./save_model/dqn_weight_T0803_180759_150_maxscore_pass_finishline.h5"
-# episode: 216   score: 195.5 [score] 1692.7 / 100.0 % (= 16.9 ), episode: 193  vs.   [mean] 195.5 / 10.75 % (= 18.2 ), episode: 216
+# model_weight_path = "./save_model/dqn_weight_T0804_094245_420_throttle_test_pass_finishline.h5"
+# episode: 784  score: 62.6  check point reached: 14  lap: 4.03 [score]  1969.3 / 100.0 % (= 19.7 ), episode: 629
 
-# Next..
-model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
+model_weight_path = "./save_model/dqn_weight_T0804_150602_630_throttle_test_pass_finishline.h5"
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
@@ -77,13 +75,13 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         actions = [
-            dict(throttle=0.6, steering=0.1),
-            dict(throttle=0.6, steering=-0.1),
+            dict(throttle=0.8, steering=0.1),
+            dict(throttle=0.8, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.6, steering=0)
+            dict(throttle=0.9, steering=0)
         ]
         #
         # Editing area ends
@@ -102,13 +100,14 @@ class DQNCustomClient(DQNClient):
         #
         thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
+
         avoid_o_to_middle = 10
-        weight_dist_5 = 0.0
-        weight_dist_4 = 0.0
-        weight_dist_3 = 0.0
-        weight_dist_2 = 0.0
-        weight_dist_1 = 0.0
-        weight_dist_0 = 0.0
+        weight_dist_0 = 1
+        weight_dist_1 = 0.8
+        weight_dist_2 = 0.6
+        weight_dist_3 = 0.4
+        weight_dist_4 = 0.2 
+        weight_dist_5 = 0.1
         
         # sensing_info:
         # sensing_info.collided
@@ -137,16 +136,28 @@ class DQNCustomClient(DQNClient):
         if max_change_value > 15:
             # go inside!! (make: 1)
             if max_change_index < 4 and max_change_index > 0:
-                weight_dist_1 = 0.1
-                weight_dist_2 = -0.4
-                weight_dist_3 = -0.3
-                weight_dist_4 = -0.2
-                weight_dist_5 = -0.1    
+                # weight_dist_1 = 0.9
+                # weight_dist_2 = 0.2
+                # weight_dist_3 = 0.2
+                # weight_dist_4 = 0.1
+                # weight_dist_5 = 0.1
+                if sensing_info.speed < 30:
+                    weight_dist_1 = 0.9
+                    weight_dist_2 = 0.2
+                    weight_dist_3 = 0.2
+                    weight_dist_4 = 0.1
+                    weight_dist_5 = 0.1
+                else:
+                    weight_dist_1 = 0.9
+                    weight_dist_2 = 0.2
+                    weight_dist_3 = 0.2
+                    weight_dist_4 = 0.1
+                    weight_dist_5 = 0.1
             # go outside!! (make: 0.6)           
             # else:
             #     weight_dist_4 = 0.4
             #     weight_dist_5 = -0.1
-                    
+                            
         # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
         # if len(sensing_info.track_forward_angles) > 0:
         #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
@@ -157,19 +168,23 @@ class DQNCustomClient(DQNClient):
             reward = -1
         elif avoid_o_to_middle < 2.5:
             reward = -0.5   # -1 로 주면 frozen 원인인듯
+        elif max_change_value < 15 and sensing_info.speed > 40:
+            reward = 0.8
         else:
             if dist > 5:
-                reward = 0.1 + weight_dist_5
+                reward = weight_dist_5
             elif dist > 4:
-                reward = 0.2 + weight_dist_4
+                reward = weight_dist_4
             elif dist > 3:
-                reward = 0.4 + weight_dist_3
+                reward = weight_dist_3
             elif dist > 2:
-                reward = 0.6 + weight_dist_2
+                reward = weight_dist_2
             elif dist > 1:
-                reward = 0.8 + weight_dist_1
+                reward = weight_dist_1
             else:
-                reward = 1 + weight_dist_0
+                reward = weight_dist_0
+
+            
         #
         # Editing area ends
         # ==========================================================#

@@ -18,7 +18,7 @@ from abc import abstractmethod
 # =========================================================== #
 enable_api_control = True  # True(Api Control) /False(Key board control)
 is_debug = False
-current_clock_speed = 2
+current_clock_speed = 1
 
 # =========================================================== #
 
@@ -385,7 +385,7 @@ class DQNClient:
 
                 print("episode:", current_episode, " score:", round(score,1), " check point reached:", check_point_index,
                     " lap:", sensing_info.lap_progress,
-                    "[score]", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode)
+                    "[score] ", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode)
                     #" vs. ",
                     #"[mean]", round(save_score,1), "/", save_lap_progress2, "% (=", max_mean, "), episode:", save_episode2)
 
