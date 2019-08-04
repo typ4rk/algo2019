@@ -64,6 +64,79 @@ class DQNCustomClient(DQNClient):
         # ==========================================================#
         return actions
 
+    def failure_condition(self, sensing_info):
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
+        dist = abs(sensing_info.to_middle)
+        conds = (thresh_dist < dist
+                , sensing_info.collided);
+
+        if any(conds):
+            return True
+
+        return False
+
+    def calc_dist_reward_value(self, sensing_info):
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
+        dist = abs(sensing_info.to_middle)
+        reward_value = (thresh_dist-dist)/thresh_dist
+
+        tfo = sensing_info.track_forward_obstacles
+
+        if tfo:
+            max_dist_to_o = 3.0
+            o_dist, o_center_dist = tfo[0]
+            if o_dist < 30:
+                o_reward_value = 0.0
+                if o_center_dist < 0:
+                    best = o_center_dist + 1.0 + 1.25
+                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
+                    if best <= dist:
+                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
+                    else:
+                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
+
+                else:
+                    best = o_center_dist - 1.0 - 1.25
+                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
+                    if dist <= best:
+                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
+                    else:
+                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
+                reward_value = o_reward_value
+
+        return reward_value
+
+    def calc_speed_reward_value(self, sensing_info):
+        max_speed = 80
+        speed = sensing_info.speed
+        reward_value = speed/max_speed if speed/max_speed <= 1.0 else 1.0
+
+        return reward_value
+
+    def calc_angle_reward_value(self, sensing_info):
+        ma = sensing_info.moving_angle
+        tfa = sensing_info.track_forward_angles
+        tfa_differences = []
+
+        i = 1;
+        while i < len(tfa):
+            tfa_differences.append(tfa[i - 1] - tfa[i])
+            i = i + 1
+
+        max_diff_angle = max(tfa_differences)
+        max_angle_dist = tfa_differences.index(max_diff_angle)
+        max_angle = tfa[max_angle_dist];
+        curve_speed_constant = 1.0
+
+        if max_angle_dist == 0:
+            reward_value = 1.0
+        elif 1 <= max_angle_dist < 3:
+            reward_value = ma/max_angle if ma/max_angle <= 1.0 else 1.0
+        else:
+            reward_value = (max_angle-ma)/max_angle
+
+        return reward_value
+
     # =========================================================== #
     # Reward Function
     # =========================================================== #
@@ -74,27 +147,14 @@ class DQNCustomClient(DQNClient):
         # =========================================================== #
         # Editing area starts from here
         #
-        thresh_dist = self.half_road_limit  # 4 wheels off the track
-        dist = abs(sensing_info.to_middle)
+        fc = self.failure_condition(sensing_info)
+        speed_reward_value = self.calc_speed_reward_value(sensing_info) * 0.1
+        dist_reward_value = self.calc_dist_reward_value(sensing_info) * 0.6
+        angle_reward_value = self.calc_angle_reward_value(sensing_info) * 0.3
 
-        if dist > thresh_dist:
-            reward = -1
-        elif sensing_info.collided:
-            reward = -1
-        else:
-            if dist > 5:
-                reward = 0.1
-            elif dist > 4:
-                reward = 0.2
-            elif dist > 3:
-                reward = 0.4
-            elif dist > 2:
-                reward = 0.6
-            elif dist > 1:
-                reward = 0.8
-            else:
-                reward = 1
-        print("sensing_info.lap_progress: ",sensing_info.lap_progress)
+        reward = speed_reward_value + dist_reward_value + angle_reward_value - (1.0 if fc else 0.0)
+
+        print(f"sensing_info.lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
