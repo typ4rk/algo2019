@@ -38,13 +38,23 @@ model_load = True
 # model_weight_path = "./save_model/dqn_weight_T0804_082415_300_throttle_test_p80.h5"
 # episode: 715  score: 193.1  check point reached: 39  lap: 10.75 [score]  2260.8 / 100.0 % (= 22.6 ), episode: 419
 
+# ----- ignore -----
+## Try 6
+## model_weight_path = "./save_model/dqn_weight_T0804_094245_420_throttle_test_pass_finishline.h5"
+## episode: 784  score: 62.6  check point reached: 14  lap: 4.03 [score]  1969.3 / 100.0 % (= 19.7 ), episode: 629
+
+## Try 7
+## model_weight_path = "./save_model/dqn_weight_T0804_150602_630_throttle_test_pass_finishline.h5"
+## episode: 526  score: 74.9  check point reached: 18  lap: 5.11 [score]  526.2 / 26.08 % (= 20.2 ), episode: 461
+
+# ----- again -----
 # Try 6
-model_weight_path = "./save_model/dqn_weight_T0804_094245_420_throttle_test_pass_finishline.h5"
-# episode: 784  score: 62.6  check point reached: 14  lap: 4.03 [score]  1969.3 / 100.0 % (= 19.7 ), episode: 629
+# model_weight_path = "./save_model/dqn_weight_T0804_094245_420_throttle_test_pass_finishline.h5"
+# episode: 170  score: 284.5  check point reached: 44  lap: 12.1 [score]  2579.9 / 100.0 % (= 25.8 ), episode: 144
 
 # Try 7
-# model_weight_path = "./save_model/dqn_weight_T0804_150602_630_throttle_test_pass_finishline.h5"
-# episode: 526  score: 74.9  check point reached: 18  lap: 5.11 [score]  526.2 / 26.08 % (= 20.2 ), episode: 461
+model_weight_path = "./save_model/dqn_weight_T0805_085758_150_throttle_test_pass_finishline.h5"
+
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
@@ -117,26 +127,28 @@ class DQNCustomClient(DQNClient):
         # sensing_info.track_forward_angles
         # sensing_info.track_forward_obstacles
 
-        # 장애물을 발견한 경우, 중앙으로부터의 거리 차가 클수록 보상이 높다
+        # ?�애물을 발견?? 경우, 중앙?�로부?�의 거리 차�? ?�수�? 보상?? ?�다
         if len(sensing_info.track_forward_obstacles) > 0:
             o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
             if o_dist < 50:
                 avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
 
-        # 전방 주행각도 변화량 정보
+        # ?�방 주행각도 변?�량 ?�보
         change_rate_angles = []
         for x in range(0, 9):
             change_rate = abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x])
             change_rate_angles.append(change_rate)
-            if x < 3 and change_rate > 15:
+            # if x < 3 and change_rate > 15:
+            if x < 3 and change_rate > 20:
                 up_speed = False
 
         max_change_value = max(change_rate_angles)
         max_change_index = change_rate_angles.index(max_change_value)
 
-        # 커브각도가 15 이상인 코너링 구간에 근접한 경우
+        # 커브각도가 15 ?�상?? 코너�? 구간?? 근접?? 경우
         if max_change_value > 15:
-            if max_change_index < 4 and max_change_index > 0:
+            # if max_change_index < 4 and max_change_index > 0:
+            if max_change_index < 3 and max_change_index > 0:
                 up_speed = False
 
         if up_speed == True and sensing_info.speed > 40:
@@ -144,7 +156,7 @@ class DQNCustomClient(DQNClient):
         elif up_speed == False and sensing_info.speed < 30:
             down_speed_reward = 0.2
                             
-        # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
+        # ?�랙?? 각도?� 차량?? 각도 차이가 ?�을?�록 보상?? ?�다
         # if len(sensing_info.track_forward_angles) > 0:
         #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
 
@@ -153,7 +165,7 @@ class DQNCustomClient(DQNClient):
         elif sensing_info.collided:
             reward = -1
         elif avoid_o_to_middle < 2.5:
-            reward = -0.5   # -1 로 주면 frozen 원인인듯
+            reward = -0.5   # -1 �? 주면 frozen ?�인?�듯
         # elif max_change_value < 15 and sensing_info.speed > 40:
         #     reward = 0.8        
         else:
@@ -180,17 +192,17 @@ class DQNCustomClient(DQNClient):
     # =========================================================== #
     def build_custom_model(self):
         model = Sequential()
-        # 레이어 쌓기 (노드의 개수: 32, relu: 활성함수, he_uniform: Weight 초기값)
+        # ?�이?? ?�기 (?�드?? 개수: 32, relu: ?�성?�수, he_uniform: Weight 초기�?)
         model.add(Dense(32, input_dim=self.state_size, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(32, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(self.action_size, activation='linear',
                         kernel_initializer='he_uniform'))
-        # 레이어 구성 & 로그작성
+        # ?�이?? 구성 & 로그?�성
         model.summary()
         
-        # Loss 함수 (learning_rate 지정 가능)
+        # Loss ?�수 (learning_rate 지?? 가??)
         model.compile(loss='mse', optimizer=Adam(lr=self.dqn_param.learning_rate))
 
         return model
