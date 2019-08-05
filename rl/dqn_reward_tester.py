@@ -16,29 +16,101 @@ class DQNRewardTester():
     # =========================================================== #
     # Reward function to test
     # =========================================================== #
+    def failure_condition(self, sensing_info):
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
+        dist = abs(sensing_info.to_middle)
+        conds = (thresh_dist < dist
+                , sensing_info.collided);
+
+        if any(conds):
+            return -1.0
+
+        return 0.0
+
+    def calc_dist_reward_value(self, sensing_info):
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
+        dist = abs(sensing_info.to_middle)
+        reward_value = (thresh_dist-dist)/thresh_dist
+
+        tfo = sensing_info.track_forward_obstacles
+
+        if tfo:
+            max_dist_to_o = 3.0
+            o_dist, o_center_dist = tfo[0]
+            if o_dist < 60:
+                o_reward_value = 0.0
+                if o_center_dist < 0:
+                    best = o_center_dist + 1.0 + 1.40
+                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
+                    if best <= dist:
+                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
+                    else:
+                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
+
+                else:
+                    best = o_center_dist - 1.0 - 1.40
+                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
+                    if dist <= best:
+                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
+                    else:
+                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
+                reward_value = o_reward_value
+
+        return reward_value
+
+    def calc_speed_reward_value(self, sensing_info):
+        max_speed = 80
+        speed = sensing_info.speed
+        reward_value = speed/max_speed if speed/max_speed <= 1.0 else 1.0
+
+        return reward_value
+
+    def calc_angle_reward_value(self, sensing_info):
+        ma = sensing_info.moving_angle
+        tfa = sensing_info.track_forward_angles
+        tfa_differences = []
+
+        i = 1;
+        while i < len(tfa):
+            tfa_differences.append(tfa[i - 1] - tfa[i])
+            i = i + 1
+
+        thresh_angle = 20
+
+        max_diff_angle = max(tfa_differences)
+        max_angle_dist = tfa_differences.index(max_diff_angle)
+        max_angle = tfa[max_angle_dist];
+
+        if max_angle_dist == 0:
+            reward_value = 1.0
+        elif 1 <= max_angle_dist < 3:
+            reward_value = 1.0 - (max_angle - ma)/thresh_angle
+        else:
+            reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
+
+        return abs(reward_value)
+
+    # =========================================================== #
+    # Reward Function
+    # =========================================================== #
     def compute_reward(self, sensing_info):
 
-        thresh_dist = self.half_road_limit
-        dist = abs(sensing_info.to_middle)
+        # =========================================================== #
+        # Area for writing code
+        # =========================================================== #
+        # Editing area starts from here
+        #
+        fc = self.failure_condition(sensing_info)
+        speed_reward_value = self.calc_speed_reward_value(sensing_info)
+        dist_reward_value = self.calc_dist_reward_value(sensing_info) * 2.0
+        angle_reward_value = self.calc_angle_reward_value(sensing_info)
 
-        if dist > thresh_dist:
-            reward = -1.0
-        elif sensing_info.collided:
-            reward = -1.0
-        else:
-            if dist > 5:
-                reward = 0.1
-            elif dist > 4:
-                reward = 0.2
-            elif dist > 3:
-                reward = 0.4
-            elif dist > 2:
-                reward = 0.6
-            elif dist > 1:
-                reward = 0.8
-            else:
-                reward = 1
+        reward = speed_reward_value * dist_reward_value * angle_reward_value + fc
 
+        print(f"lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        #
+        # Editing area ends
+        # ==========================================================#
         return reward
 
     def __init__(self):

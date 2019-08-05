@@ -57,7 +57,7 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
-            dict(throttle=0.8, steering=0)
+            dict(throttle=0.6, steering=0)
         ]
         #
         # Editing area ends
@@ -71,9 +71,9 @@ class DQNCustomClient(DQNClient):
                 , sensing_info.collided);
 
         if any(conds):
-            return True
+            return -1.0
 
-        return False
+        return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
         thresh_dist = self.half_road_limit  # 4 wheels off the track
@@ -83,12 +83,13 @@ class DQNCustomClient(DQNClient):
         tfo = sensing_info.track_forward_obstacles
 
         if tfo:
+            margin = 0.15
             max_dist_to_o = 3.0
             o_dist, o_center_dist = tfo[0]
             if o_dist < 60:
                 o_reward_value = 0.0
                 if o_center_dist < 0:
-                    best = o_center_dist + 1.0 + 1.40
+                    best = o_center_dist + 1.0 + 1.25 + margin
                     abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
                     if best <= dist:
                         o_reward_value = 1.0 - abs_diff/max_dist_to_o
@@ -96,7 +97,7 @@ class DQNCustomClient(DQNClient):
                         o_reward_value = -0.5 * abs_diff/max_dist_to_o
 
                 else:
-                    best = o_center_dist - 1.0 - 1.40
+                    best = o_center_dist - 1.0 - 1.25 + margin
                     abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
                     if dist <= best:
                         o_reward_value = 1.0 - abs_diff/max_dist_to_o
@@ -107,9 +108,9 @@ class DQNCustomClient(DQNClient):
         return reward_value
 
     def calc_speed_reward_value(self, sensing_info):
-        max_speed = 80
+        max_speed = 100
         speed = sensing_info.speed
-        reward_value = speed/max_speed if speed/max_speed <= 1.0 else 1.0
+        reward_value = speed/max_speed
 
         return reward_value
 
@@ -148,14 +149,14 @@ class DQNCustomClient(DQNClient):
         # =========================================================== #
         # Editing area starts from here
         #
-        fc = self.failure_condition(sensing_info)
-        speed_reward_value = self.calc_speed_reward_value(sensing_info)
-        dist_reward_value = self.calc_dist_reward_value(sensing_info)
-        angle_reward_value = self.calc_angle_reward_value(sensing_info)
+        fc = self.failure_condition(sensing_info) * 1.5
+        speed_reward_value = self.calc_speed_reward_value(sensing_info) * 0.1
+        dist_reward_value = self.calc_dist_reward_value(sensing_info) * 0.7
+        angle_reward_value = self.calc_angle_reward_value(sensing_info) * 0.2
 
-        reward = speed_reward_value * dist_reward_value * angle_reward_value - (1.0 if fc else 0.0)
+        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
 
-        print(f"lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} f:{fc} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
