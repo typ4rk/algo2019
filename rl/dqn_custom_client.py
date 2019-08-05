@@ -54,6 +54,7 @@ model_load = True
 
 # Try 7
 model_weight_path = "./save_model/dqn_weight_T0805_085758_150_throttle_test_pass_finishline.h5"
+# episode: 122  score: 1996.3  check point reached: 138  lap: 87.37 [score]  3104.2 / 100.0 % (= 31.0 ), episode: 81
 
 # ===========================================================
 
