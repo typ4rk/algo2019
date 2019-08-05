@@ -53,9 +53,20 @@ model_load = True
 # episode: 170  score: 284.5  check point reached: 44  lap: 12.1 [score]  2579.9 / 100.0 % (= 25.8 ), episode: 144
 
 # Try 7
-model_weight_path = "./save_model/dqn_weight_T0805_085758_150_throttle_test_pass_finishline.h5"
+# model_weight_path = "./save_model/dqn_weight_T0805_085758_150_throttle_test_pass_finishline.h5"
 # episode: 122  score: 1996.3  check point reached: 138  lap: 87.37 [score]  3104.2 / 100.0 % (= 31.0 ), episode: 81
 
+# Try 8
+# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
+# episode: 189  score: 824.2  check point reached: 96  lap: 26.08 [score]  3207.3 / 100.0 % (= 32.1 ), episode: 142
+
+# Try 9 (up_speed_reward 값 0.5 이상 크게 설정)
+# model_weight_path = "./save_model/dqn_weight_T0806_081629_150_pass_finishline_stillslow.h5"
+# episode: 131  score: 419.7  check point reached: 45  lap: 12.37 [score]  2408.5 / 75.81 % (= 31.8 ), episode: 61
+
+# Try 10
+model_weight_path = "./save_model/dqn_weight_T0806_132036_70_upspeedreward_p75.h5"
+# episode: 68  score: 1364.1  check point reached: 148  lap: 39.78 [score]  3556.6 / 100.0 % (= 35.6 ), episode: 50
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
@@ -128,13 +139,13 @@ class DQNCustomClient(DQNClient):
         # sensing_info.track_forward_angles
         # sensing_info.track_forward_obstacles
 
-        # ?�애물을 발견?? 경우, 중앙?�로부?�의 거리 차�? ?�수�? 보상?? ?�다
+        # ?�애물을 발견?? 경우, 중앙?�로부?�의 거리 차�? ?�수�? 보상?? ?�다
         if len(sensing_info.track_forward_obstacles) > 0:
             o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
             if o_dist < 50:
                 avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
 
-        # ?�방 주행각도 변?�량 ?�보
+        # ?�방 주행각도 변?�량 ?�보
         change_rate_angles = []
         for x in range(0, 9):
             change_rate = abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x])
@@ -146,18 +157,29 @@ class DQNCustomClient(DQNClient):
         max_change_value = max(change_rate_angles)
         max_change_index = change_rate_angles.index(max_change_value)
 
-        # 커브각도가 15 ?�상?? 코너�? 구간?? 근접?? 경우
+        # 커브각도가 15 ?�상?? 코너�? 구간?? 근접?? 경우
         if max_change_value > 15:
             # if max_change_index < 4 and max_change_index > 0:
             if max_change_index < 3 and max_change_index > 0:
                 up_speed = False
 
-        if up_speed == True and sensing_info.speed > 40:
-            up_speed_reward = 0.2
-        elif up_speed == False and sensing_info.speed < 30:
+        if up_speed == True:
+            if sensing_info.speed > 60:
+                up_speed_reward = 0.8 # 0.4
+            elif sensing_info.speed > 50:
+                up_speed_reward = 0.7 # 0.3
+            elif sensing_info.speed > 40:
+                up_speed_reward = 0.6 # 0.2
+            elif sensing_info.speed > 30:
+                up_speed_reward = 0.5 # 0.1
+
+            # print("up_speed !! [Reward]", up_speed_reward, " [Speed]", sensing_info.speed)
+        elif up_speed == False: 
+            # and sensing_info.speed < 30:
             down_speed_reward = 0.2
-                            
-        # ?�랙?? 각도?� 차량?? 각도 차이가 ?�을?�록 보상?? ?�다
+            # print("down_speed !! [Reward]", down_speed_reward, " [Speed]", sensing_info.speed)
+                                        
+        # ?�랙?? 각도?� 차량?? 각도 차이가 ?�을?�록 보상?? ?�다
         # if len(sensing_info.track_forward_angles) > 0:
         #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
 
@@ -166,7 +188,7 @@ class DQNCustomClient(DQNClient):
         elif sensing_info.collided:
             reward = -1
         elif avoid_o_to_middle < 2.5:
-            reward = -0.5   # -1 �? 주면 frozen ?�인?�듯
+            reward = -0.5   # -1 �? 주면 frozen ?�인?�듯
         # elif max_change_value < 15 and sensing_info.speed > 40:
         #     reward = 0.8        
         else:
@@ -193,17 +215,17 @@ class DQNCustomClient(DQNClient):
     # =========================================================== #
     def build_custom_model(self):
         model = Sequential()
-        # ?�이?? ?�기 (?�드?? 개수: 32, relu: ?�성?�수, he_uniform: Weight 초기�?)
+        # ?�이?? ?�기 (?�드?? 개수: 32, relu: ?�성?�수, he_uniform: Weight 초기�?)
         model.add(Dense(32, input_dim=self.state_size, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(32, activation='relu',
                         kernel_initializer='he_uniform'))
         model.add(Dense(self.action_size, activation='linear',
                         kernel_initializer='he_uniform'))
-        # ?�이?? 구성 & 로그?�성
+        # ?�이?? 구성 & 로그?�성
         model.summary()
         
-        # Loss ?�수 (learning_rate 지?? 가??)
+        # Loss ?�수 (learning_rate 지?? 가??)
         model.compile(loss='mse', optimizer=Adam(lr=self.dqn_param.learning_rate))
 
         return model

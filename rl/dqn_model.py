@@ -327,7 +327,6 @@ class DQNClient:
             # 보상 함수로 파라미터를 넘겨준다.
             reward = self.compute_reward(sensing_info)
 
-
             # 여기서  done 은 보통은 도로 심하게 이탈해서 더이상 진행하기 어려운 경우.
             # frozen 시뮬레이터가 응답 없는 경우. 리셋.
             done, frozen = self.is_done(car_next_state, car_current_state, reward, progress, frozen)
