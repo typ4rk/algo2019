@@ -19,8 +19,26 @@ training_duration = 0
 model_load = True
 
 # Try 8
-model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
+# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
+# map: SpeedRacing
 # episode: 1870  score: 7.2  check point reached: 9  lap: 2.69 [score]  189.3 / 25.81 % (= 7.3 ), episode: 1103
+
+# --------------------------------------------------------
+# map: RL_Map1_block (이때만 잠깐 맵 변경해서 테스트)
+#
+# Try 1
+# episode: 357  score: 450.0  check point reached: 71  lap: 27.91 [score]  1248.2 / 77.52 % (= 16.1 ), episode: 277
+# --------------------------------------------------------
+
+# map: SpeedRacing 복귀
+# Try 2
+# model_weight_path = "./save_model/dqn_weight_T0808_085342_280_RL_Map1_block_p77.h5"
+# episode: 264  score: 108.8  check point reached: 14  lap: 4.03 [score]  321.7 / 10.22 % (= 31.5 ), episode: 188
+
+# Try 3
+model_weight_path = "./save_model/dqn_weight_T0808_143501_190_p10.h5"
+# episode: 101  score: 112.2  check point reached: 16  lap: 4.57 [score]  2043.2 / 76.08 % (= 26.9 ), episode: 100\
+
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
