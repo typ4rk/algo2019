@@ -36,9 +36,16 @@ model_load = True
 # episode: 264  score: 108.8  check point reached: 14  lap: 4.03 [score]  321.7 / 10.22 % (= 31.5 ), episode: 188
 
 # Try 3
-model_weight_path = "./save_model/dqn_weight_T0808_143501_190_p10.h5"
-# episode: 101  score: 112.2  check point reached: 16  lap: 4.57 [score]  2043.2 / 76.08 % (= 26.9 ), episode: 100\
+# model_weight_path = "./save_model/dqn_weight_T0808_143501_190_p10.h5"
+# episode: 101  score: 112.2  check point reached: 16  lap: 4.57 [score]  2043.2 / 76.08 % (= 26.9 ), episode: 100
 
+# Try 4
+# model_weight_path = "./save_model/dqn_weight_T0808_161332_100_p76.h5"
+# episode: 604  score: 30.4  check point reached: 16  lap: 4.57 [score]  72.8 / 12.1 % (= 6.0 ), episode: 559
+
+# Try 5
+model_weight_path = "./save_model/dqn_weight_T0808_202811_560_p12.h5"
+# episode: 2151  score: 23.2  check point reached: 16  lap: 4.57 [score]  43.1 / 11.02 % (= 3.9 ), episode: 276
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
