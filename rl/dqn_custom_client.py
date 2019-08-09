@@ -16,40 +16,10 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = True
+model_load = False
 
-# Try 8
-# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
-# map: SpeedRacing
-# episode: 1870  score: 7.2  check point reached: 9  lap: 2.69 [score]  189.3 / 25.81 % (= 7.3 ), episode: 1103
-
-# --------------------------------------------------------
-# map: RL_Map1_block (이때만 잠깐 맵 변경해서 테스트)
-#
 # Try 1
-# episode: 357  score: 450.0  check point reached: 71  lap: 27.91 [score]  1248.2 / 77.52 % (= 16.1 ), episode: 277
-# --------------------------------------------------------
-
-# map: SpeedRacing 복귀
-# Try 2
-# model_weight_path = "./save_model/dqn_weight_T0808_085342_280_RL_Map1_block_p77.h5"
-# episode: 264  score: 108.8  check point reached: 14  lap: 4.03 [score]  321.7 / 10.22 % (= 31.5 ), episode: 188
-
-# Try 3
-# model_weight_path = "./save_model/dqn_weight_T0808_143501_190_p10.h5"
-# episode: 101  score: 112.2  check point reached: 16  lap: 4.57 [score]  2043.2 / 76.08 % (= 26.9 ), episode: 100
-
-# Try 4
-# model_weight_path = "./save_model/dqn_weight_T0808_161332_100_p76.h5"
-# episode: 604  score: 30.4  check point reached: 16  lap: 4.57 [score]  72.8 / 12.1 % (= 6.0 ), episode: 559
-
-# Try 5
-# model_weight_path = "./save_model/dqn_weight_T0808_202811_560_p12.h5"
-# episode: 2151  score: 23.2  check point reached: 16  lap: 4.57 [score]  43.1 / 11.02 % (= 3.9 ), episode: 276
-
-# Try 5
-model_weight_path = "./save_model/dqn_weight_T0808_223505_280_p11.h5"
-# episode: 77  score: 3081.9  check point reached: 185  lap: 100.0 [score]  3081.9 / 100.0 % (= 30.8 ), episode: 77
+# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
 
 # ===========================================================
 
@@ -65,7 +35,7 @@ class DQNCustomClient(DQNClient):
     def make_dqn_param():
         dqn_param = DQNParam()
         dqn_param.discount_factor = 0.99
-        dqn_param.learning_rate = 0.00025
+        dqn_param.learning_rate = 0.001 # 0.00025
         dqn_param.epsilon = 1.0
         dqn_param.epsilon_decay = 0.999
         dqn_param.epsilon_min = 0.01
@@ -201,10 +171,19 @@ class DQNCustomClient(DQNClient):
     def build_custom_model(self):
         model = Sequential()
         # ?�이?? ?�기 (?�드?? 개수: 32, relu: ?�성?�수, he_uniform: Weight 초기�?)
-        model.add(Dense(32, input_dim=self.state_size, activation='relu',
+        # model.add(Dense(32, input_dim=self.state_size, activation='relu',
+        #                 kernel_initializer='he_uniform'))
+        # model.add(Dense(32, activation='relu',
+        #                 kernel_initializer='he_uniform'))
+        model.add(Dense(1164, input_dim=self.state_size, activation='relu',
                         kernel_initializer='he_uniform'))
-        model.add(Dense(32, activation='relu',
+        model.add(Dense(200, activation='relu',
                         kernel_initializer='he_uniform'))
+        model.add(Dense(50, input_dim=self.state_size, activation='relu',
+                        kernel_initializer='he_uniform'))
+        model.add(Dense(10, activation='relu',
+                        kernel_initializer='he_uniform'))
+
         model.add(Dense(self.action_size, activation='linear',
                         kernel_initializer='he_uniform'))
         # ?�이?? 구성 & 로그?�성
