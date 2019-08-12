@@ -48,8 +48,12 @@ model_load = True
 # episode: 2151  score: 23.2  check point reached: 16  lap: 4.57 [score]  43.1 / 11.02 % (= 3.9 ), episode: 276
 
 # Try 5
-model_weight_path = "./save_model/dqn_weight_T0808_223505_280_p11.h5"
-# episode: 77  score: 3081.9  check point reached: 185  lap: 100.0 [score]  3081.9 / 100.0 % (= 30.8 ), episode: 77
+# model_weight_path = "./save_model/dqn_weight_T0808_223505_280_p11.h5"
+# [NOT-SAVED]episode: 77  score: 3081.9  check point reached: 185  lap: 100.0 [score]  3081.9 / 100.0 % (= 30.8 ), episode: 77
+# episode: 97  score: 752.0  check point reached: 96  lap: 26.08 [score]  3323.3 / 100.0 % (= 33.2 ), episode: 75
+
+# [MAP] mariana
+model_weight_path = "./save_model/dqn_weight_T0812_094057_80_pass_finishline.h5"
 
 # ===========================================================
 
