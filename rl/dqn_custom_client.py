@@ -53,7 +53,16 @@ model_load = True
 # episode: 97  score: 752.0  check point reached: 96  lap: 26.08 [score]  3323.3 / 100.0 % (= 33.2 ), episode: 75
 
 # [MAP] mariana
-model_weight_path = "./save_model/dqn_weight_T0812_094057_80_pass_finishline.h5"
+# Try 5-1
+# model_weight_path = "./save_model/dqn_weight_T0812_094057_80_pass_finishline.h5"
+
+# Try 5-2
+# model_weight_path = "./save_model/dqn_weight_T0812_155641_200_p4_mariana.h5"
+# episode: 650  score: 34.1  check point reached: 27  lap: 3.43 [score]  64.4 / 4.06 % (= 15.9 ), episode: 620
+
+# Try 5-3: up_speed = False 일 때, speed < 30 이면 보상 두배 설정
+model_weight_path = "./save_model/dqn_weight_T0812_204959_620_p4_mariana.h5"
+# episode: 961  score: 1.1  check point reached: 9  lap: 1.27 [score]  765.9 / 32.23 % (= 23.8 ), episode: 836
 
 # ===========================================================
 
@@ -139,7 +148,8 @@ class DQNCustomClient(DQNClient):
             change_rate = abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x])
             change_rate_angles.append(change_rate)
             # if x < 3 and change_rate > 15:
-            if x < 3 and change_rate > 20:
+            # if x < 3 and change_rate > 20:
+            if x < 5 and change_rate > 20:
                 up_speed = False
 
         max_change_value = max(change_rate_angles)
@@ -158,6 +168,9 @@ class DQNCustomClient(DQNClient):
             # print("up_speed !! [Reward]", up_speed_reward, " [Speed]", sensing_info.speed)
         elif up_speed == False: # and sensing_info.speed < 30:
             down_speed_reward = 0.1
+            if sensing_info.speed < 30:
+                down_speed_reward = 0.2
+
             if dist > 2:
                 temp = 0
             elif dist > 1:
