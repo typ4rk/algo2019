@@ -16,10 +16,10 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = False
+model_load = True
 
 # Try 1
-# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
+model_weight_path = "./save_model/T0812_232024/dqn_weight_1800.h5"
 
 # ===========================================================
 

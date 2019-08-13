@@ -12,7 +12,7 @@ from dqn_custom_client import DQNCustomClient
 # model_weight_path = "./save_model/.../dqn_weight_00.h5"
 
 # Success
-# model_weight_path = "./save_model/dqn_weight_T0803_213413_200_maxscore_pass_finishline.h5"
+model_weight_path = "./save_model/T0811_203624/dqn_weight_160.h5"
 # [2] the evaluation result -  completed !!, progress :100 % , estimated lap time: 4 mins. 8.63 secs
 
 # model_weight_path = "./save_model/dqn_weight_T0805_085758_150_throttle_test_pass_finishline.h5"
