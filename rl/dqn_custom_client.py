@@ -65,7 +65,7 @@ model_load = True
 # episode: 961  score: 1.1  check point reached: 9  lap: 1.27 [score]  765.9 / 32.23 % (= 23.8 ), episode: 836
 
 # Try 5-4
-model_weight_path = "./save_model/dqn_weight_T0812_232403_840_p32_mariana.h5"
+model_weight_path = "./save_model/dqn_weight_T0813_083242_390_p35.h5"
 # episode: 505  score: 35.4  check point reached: 8  lap: 1.14 [score]  1993.8 / 35.15 % (= 56.7 ), episode: 386
 
 # ===========================================================
