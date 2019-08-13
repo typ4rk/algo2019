@@ -61,8 +61,12 @@ model_load = True
 # episode: 650  score: 34.1  check point reached: 27  lap: 3.43 [score]  64.4 / 4.06 % (= 15.9 ), episode: 620
 
 # Try 5-3: up_speed = False 일 때, speed < 30 이면 보상 두배 설정
-model_weight_path = "./save_model/dqn_weight_T0812_204959_620_p4_mariana.h5"
+# model_weight_path = "./save_model/dqn_weight_T0812_204959_620_p4_mariana.h5"
 # episode: 961  score: 1.1  check point reached: 9  lap: 1.27 [score]  765.9 / 32.23 % (= 23.8 ), episode: 836
+
+# Try 5-4
+model_weight_path = "./save_model/dqn_weight_T0812_232403_840_p32_mariana.h5"
+# episode: 505  score: 35.4  check point reached: 8  lap: 1.14 [score]  1993.8 / 35.15 % (= 56.7 ), episode: 386
 
 # ===========================================================
 
