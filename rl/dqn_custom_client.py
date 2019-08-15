@@ -76,41 +76,33 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        thresh_dist = self.half_road_limit  # 4 wheels off the track
-        dist = abs(sensing_info.to_middle)
-        reward_value = (thresh_dist-dist)/thresh_dist
+        reward_value = math.exp(-abs(sensing_info.to_middle)*1.2)
 
+        MARGIN = 0.15
+        OBSTACLE_WIDTH = 2.00
+        CAR_WIDTH = 2.50
+
+        CAR_OBSTACLE_MIN_DIST = (OBSTACLE_WIDTH + CAR_WIDTH)/2.00
+
+        SPEED_DIST_RATE = 30.0/30.0 # 30km/h 일 때 0m
+
+        speed = sensing_info.speed
         tfo = sensing_info.track_forward_obstacles
 
-        if tfo:
-            margin = 0.15
-            max_dist_to_o = 3.0
-            o_dist, o_center_dist = tfo[0]
-            if o_dist < 60:
-                o_reward_value = 0.0
-                if o_center_dist < 0:
-                    best = o_center_dist + 1.0 + 1.25 + margin
-                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
-                    if best <= dist:
-                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
-                    else:
-                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
+        for o_dist, o_center_dist in tfo:
+            min_dist = max(SPPED_DIST_RATE*speed, 1.0)
+            danger_o_dist = CAR_OBSTACLE_MIN_DIST - (CAR_OBSTACLE_MIN_DIST*o_dist/min_dist)
+            if abs(sensing_info.to_midle - o_center_dist) < danger_o_dist:
+                reward_value -= 1.0
+                break
 
-                else:
-                    best = o_center_dist - 1.0 - 1.25 + margin
-                    abs_diff = abs((dist-best) if (dist-best) < max_dist_to_o else max_dist_to_o)
-                    if dist <= best:
-                        o_reward_value = 1.0 - abs_diff/max_dist_to_o
-                    else:
-                        o_reward_value = -0.5 * abs_diff/max_dist_to_o
-                reward_value = o_reward_value
 
         return reward_value
 
     def calc_speed_reward_value(self, sensing_info):
-        max_speed = 100
+        goal_speed = 100
         speed = sensing_info.speed
-        reward_value = speed/max_speed
+        reward_value = speed/goal_speed
 
         return reward_value
 
