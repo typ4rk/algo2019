@@ -16,18 +16,61 @@ class DQNRewardTester():
     # =========================================================== #
     # Reward function to test
     # =========================================================== #
+    def get_baseline(self, sensing_info):
+        thresh_dist = self.half_road_limit
+
+        # baseline = 0
+        baseline_info = []
+        DISTANCE_TO_AVOID = 2.3
+        DISTANCE_TO_BASELINE = 2.5
+        if len(sensing_info.track_forward_obstacles) > 0:
+            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
+            if o_dist < 50:
+                # avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
+                # center position
+                # if abs(o_to_middle) < 1:
+                #     avoid_section_left = abs(o_to_middle - 2)
+                #     avoid_section_right = abs(o_to_middle + 2)
+                #     baseline = max(avoid_section_left, avoid_section_right)
+                #     print("[Obstable] baseline: ", baseline, ", o_to_middle: ", o_to_middle) 
+
+                half_dist = (abs(o_to_middle) + thresh_dist) / 3 
+                if o_to_middle < -1:
+                    baseline = o_to_middle + half_dist
+                    # print("move to Right!! baseline: ", baseline, "obs: ", o_to_middle, "car: ", sensing_info.to_middle)
+                elif o_to_middle > 1:
+                    baseline = o_to_middle - half_dist
+                    # print("move to Left!! baseline: ", baseline, "obs: ", o_to_middle, "car: ", sensing_info.to_middle)
+                else:
+                    if sensing_info.to_middle >= 0:
+                        baseline = o_to_middle + half_dist
+                        # print("Center-Right!! baseline: ", baseline, "obs: ", o_to_middle, "car: ", sensing_info.to_middle)
+                    else:
+                        baseline = o_to_middle - half_dist
+                        # print("Center-Left!! baseline: ", baseline, "obs: ", o_to_middle, "car: ", sensing_info.to_middle)
+
+                thresh_left = o_to_middle - DISTANCE_TO_AVOID
+                thresh_right = o_to_middle + DISTANCE_TO_AVOID                
+                baseline_info.append(baseline)
+                baseline_info.append(thresh_left)
+                baseline_info.append(thresh_right)
+
+        #return baseline    
+        return baseline_info
+
     def compute_reward(self, sensing_info):
 
         # =========================================================== #
         # Area for writing code
         # =========================================================== #
-        # Editing area starts from here
-        #
+        
         thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
+        DISTANCE_DECAY_RATE = 1.2        # The rate at which the reward decays for the distance function
+        CENTER_SPEED_MULTIPLIER = 2.0    # The ratio at which we prefer the distance reward to the speed reward
+        # avoid_o_to_middle = 10
+        baseline = 0
 
-        avoid_o_to_middle = 10
-        
         # sensing_info:
         # sensing_info.collided
         # sensing_info.speed
@@ -37,68 +80,43 @@ class DQNRewardTester():
         # sensing_info.track_forward_angles
         # sensing_info.track_forward_obstacles
 
-        # 장애물을 발견한 경우, 중앙으로부터의 거리 차가 클수록 보상이 높다
-        if len(sensing_info.track_forward_obstacles) > 0:
-            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
-            if o_dist < 50:
-                avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
+        # [Obstacles]
+        baseline_info = self.get_baseline(sensing_info) 
 
-        # 전방 주행각도 변화량 정보
-        change_rate_angles = []
-        for x in range(0, 9):
-            change_rate_angles.append(abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x]))
-
-        max_change_value = max(change_rate_angles)
-        max_change_index = change_rate_angles.index(max_change_value)
-
-        up_speed = False
-        down_speed = False
-        up_speed_reward = 0
-        down_speed_reward = 0
-
-        # 커브각도가 15 이상인 코너링 구간에 근접한 경우
-        if max_change_value > 15:
-            # go inside!! (make: 1)
-            if max_change_index < 4 and max_change_index > 0:
-                # weight_dist_1 = 0.9
-                # weight_dist_2 = 0.2
-                # weight_dist_3 = 0.2
-                # weight_dist_4 = 0.1
-                # weight_dist_5 = 0.1
-                down_speed = True
-        else:
-            up_speed = True
-
-        if up_speed == True and sensing_info.speed > 40:
-            up_speed_reward = 0.2
-        elif down_speed == True and sensing_info.speed < 30:
-            down_speed_reward = 0.2
-                            
-        # 트랙의 각도와 차량의 각도 차이가 작을수록 보상이 높다
-        # if len(sensing_info.track_forward_angles) > 0:
-        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
+        # [Speed]
+        # compute_speed_reward(sensing_info)
 
         if dist > thresh_dist:
             reward = -1
         elif sensing_info.collided:
             reward = -1
-        elif avoid_o_to_middle < 2.5:
-            reward = -0.5   # -1 로 주면 frozen 원인인듯
-        # elif max_change_value < 15 and sensing_info.speed > 40:
-        #     reward = 0.8        
+        elif len(baseline_info) > 0:
+            baseline = baseline_info[0] 
+            thresh_left = baseline_info[1]
+            thresh_right = baseline_info[2]
+
+            # if sensing_info.to_middle > thresh_left and sensing_info.to_middle < thresh_right:
+            #     reward = 0
+            # else:
+            reward = math.exp(-(abs(sensing_info.to_middle - baseline) * DISTANCE_DECAY_RATE))
+                # print("baseline:", abs(sensing_info.to_middle - baseline), "calc:", abs(sensing_info.to_middle - baseline) * DISTANCE_DECAY_RATE)
+            
+            print("[Reward] ", round(reward,3), "dist: ", round(sensing_info.to_middle, 2), ", [base]", round(baseline, 2), "L:", round(thresh_left,2), "R:", round(thresh_right, 2))
         else:
-            if dist > 5:
-                reward = 0.1 + up_speed_reward
-            elif dist > 4:
-                reward = 0.2 + up_speed_reward
-            elif dist > 3:
-                reward = 0.4 + up_speed_reward
-            elif dist > 2:
-                reward = 0.6 + up_speed_reward
-            elif dist > 1:
-                reward = 0.8 + down_speed_reward + up_speed_reward
-            else:
-                reward = 1 + down_speed_reward + up_speed_reward
+            # if dist > 5:
+            #     reward = 0.1
+            # elif dist > 4:
+            #     reward = 0.2
+            # elif dist > 3:
+            #     reward = 0.4 + up_speed_reward
+            # elif dist > 2:
+            #     reward = 0.6 + up_speed_reward
+            # elif dist > 1:
+            #     reward = 0.8 + down_speed_reward + up_speed_reward
+            # else:
+            #     reward = 1 + down_speed_reward*2 + up_speed_reward*2
+            reward = math.exp(-(dist * DISTANCE_DECAY_RATE))
+            print("[Reward] ", round(reward,3), ", dist: ", round(dist, 2))
 
         #
         # Editing area ends

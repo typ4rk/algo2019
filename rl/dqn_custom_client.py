@@ -16,62 +16,12 @@ training_duration = 0
 # =========================================================== #
 # model/weight load option
 # =========================================================== #
-model_load = True
+model_load = False
+# Map: Mariana 
+# episode: 1124  score: 11.2  check point reached: 11  lap: 1.14 [score]  47.9 / 4.19 % (= 11.4 ), episode: 388
 
-# Try 8
-# model_weight_path = "./save_model/dqn_weight_T0805_131733_90_throttle_test_pass_finishline.h5"
-# map: SpeedRacing
-# episode: 1870  score: 7.2  check point reached: 9  lap: 2.69 [score]  189.3 / 25.81 % (= 7.3 ), episode: 1103
-
-# --------------------------------------------------------
-# map: RL_Map1_block (이때만 잠깐 맵 변경해서 테스트)
-#
-# Try 1
-# episode: 357  score: 450.0  check point reached: 71  lap: 27.91 [score]  1248.2 / 77.52 % (= 16.1 ), episode: 277
-# --------------------------------------------------------
-
-# map: SpeedRacing 복귀
-# Try 2
-# model_weight_path = "./save_model/dqn_weight_T0808_085342_280_RL_Map1_block_p77.h5"
-# episode: 264  score: 108.8  check point reached: 14  lap: 4.03 [score]  321.7 / 10.22 % (= 31.5 ), episode: 188
-
-# Try 3
-# model_weight_path = "./save_model/dqn_weight_T0808_143501_190_p10.h5"
-# episode: 101  score: 112.2  check point reached: 16  lap: 4.57 [score]  2043.2 / 76.08 % (= 26.9 ), episode: 100
-
-# Try 4
-# model_weight_path = "./save_model/dqn_weight_T0808_161332_100_p76.h5"
-# episode: 604  score: 30.4  check point reached: 16  lap: 4.57 [score]  72.8 / 12.1 % (= 6.0 ), episode: 559
-
-# Try 5
-# model_weight_path = "./save_model/dqn_weight_T0808_202811_560_p12.h5"
-# episode: 2151  score: 23.2  check point reached: 16  lap: 4.57 [score]  43.1 / 11.02 % (= 3.9 ), episode: 276
-
-# Try 5
-# model_weight_path = "./save_model/dqn_weight_T0808_223505_280_p11.h5"
-# [NOT-SAVED]episode: 77  score: 3081.9  check point reached: 185  lap: 100.0 [score]  3081.9 / 100.0 % (= 30.8 ), episode: 77
-# episode: 97  score: 752.0  check point reached: 96  lap: 26.08 [score]  3323.3 / 100.0 % (= 33.2 ), episode: 75
-
-# [MAP] mariana
-# Try 5-1
-# model_weight_path = "./save_model/dqn_weight_T0812_094057_80_pass_finishline.h5"
-
-# Try 5-2
-# model_weight_path = "./save_model/dqn_weight_T0812_155641_200_p4_mariana.h5"
-# episode: 650  score: 34.1  check point reached: 27  lap: 3.43 [score]  64.4 / 4.06 % (= 15.9 ), episode: 620
-
-# Try 5-3: up_speed = False 일 때, speed < 30 이면 보상 두배 설정
-# model_weight_path = "./save_model/dqn_weight_T0812_204959_620_p4_mariana.h5"
-# episode: 961  score: 1.1  check point reached: 9  lap: 1.27 [score]  765.9 / 32.23 % (= 23.8 ), episode: 836
-
-# Try 5-4
-# model_weight_path = "./save_model/dqn_weight_T0812_232403_840_p32_mariana.h5"
-# episode: 505  score: 35.4  check point reached: 8  lap: 1.14 [score]  1993.8 / 35.15 % (= 56.7 ), episode: 386
-
-# Try 5-5
-model_weight_path = "./save_model/dqn_weight_T0813_083242_390_p35.h5"
-# episode: 1378  score: 72.1  check point reached: 52  lap: 6.35 [score]  911.4 / 32.49 % (= 28.1 ), episode: 1186
-
+# Map: Speed racing
+# episode: 2959  score: 24.0  check point reached: 15  lap: 4.3 [score]  125.0 / 39.25 % (= 3.2 ), episode: 2487
 # ===========================================================
 
 class DQNCustomClient(DQNClient):
@@ -118,102 +68,115 @@ class DQNCustomClient(DQNClient):
         # ==========================================================#
         return actions
 
-    # =========================================================== #
-    # Reward Function
-    # =========================================================== #
-    def compute_reward(self, sensing_info):
+    def compute_speed_reward(self, sensing_info):
+        # ==========================================================#
+        # Calculate speed reward for detecting curves 
+        # ==========================================================#
 
-        # =========================================================== #
-        # Area for writing code
-        # =========================================================== #
-        # Editing area starts from here
-        #
-        thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
-        avoid_o_to_middle = 10
         up_speed = True
-        up_speed_reward = 0
-        down_speed_reward = 0
+        reward = 0
 
-        # sensing_info:
-        # sensing_info.collided
-        # sensing_info.speed
-        # sensing_info.moving_forward
-        # sensing_info.moving_angle
-        # sensing_info.lap_progress
-        # sensing_info.track_forward_angles
-        # sensing_info.track_forward_obstacles
-
-        # ?�애물을 발견?? 경우, 중앙?�로부?�의 거리 차�? ?�수�? 보상?? ?�다
-        if len(sensing_info.track_forward_obstacles) > 0:
-            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
-            if o_dist < 50:
-                avoid_o_to_middle = abs(sensing_info.to_middle - o_to_middle)
-
-        # ?�방 주행각도 변?�량 ?�보
         change_rate_angles = []
         for x in range(0, 9):
             change_rate = abs(sensing_info.track_forward_angles[x+1] - sensing_info.track_forward_angles[x])
             change_rate_angles.append(change_rate)
-            # if x < 3 and change_rate > 15:
-            # if x < 3 and change_rate > 20:
             if x < 5 and change_rate > 20:
                 up_speed = False
 
         max_change_value = max(change_rate_angles)
         max_change_index = change_rate_angles.index(max_change_value)
 
-        # 커브각도가 15 ?�상?? 코너�? 구간?? 근접?? 경우
+        # in the max curve area
         if max_change_value > 15:
             if max_change_index < 4 and max_change_index > 0:
-            # if max_change_index < 3 and max_change_index > 0:
                 up_speed = False
-
-        if up_speed == True:
-            if sensing_info.speed > 40:
-                up_speed_reward = 0.1
-
-            # print("up_speed !! [Reward]", up_speed_reward, " [Speed]", sensing_info.speed)
-        elif up_speed == False: # and sensing_info.speed < 30:
+ 
+        if up_speed == False:
             down_speed_reward = 0.1
             if sensing_info.speed < 30:
                 down_speed_reward = 0.2
 
             if dist > 2:
-                temp = 0
+                reward = 0
             elif dist > 1:
-                temp = down_speed_reward
+                reward = down_speed_reward
             else:
-                temp = down_speed_reward * 2
+                reward = down_speed_reward * 2
 
-            # print("down_speed !! [Reward]", temp, " [Speed]", sensing_info.speed)
-            print("down_speed !! [Reward]", temp, " [dist]", round(dist,1))
+            # print("down_speed !! [Reward]", temp, " [dist]", round(dist,1))
+        return reward
 
-        # ?�랙?? 각도?� 차량?? 각도 차이가 ?�을?�록 보상?? ?�다
-        # if len(sensing_info.track_forward_angles) > 0:
-        #     diff_angles = abs(sensing_info.track_forward_angles - sensing_info.moving_angles)
+    def get_baseline(self, sensing_info):
+        # =========================================================== #
+        # Calculate new centerline when finding obstacles
+        # =========================================================== #
+        thresh_dist = self.half_road_limit
+        baseline_info = []
+        DISTANCE_TO_AVOID = 2.3  # Do not use (Just use for printing)
+        # DISTANCE_TO_MOVE = 2.5 # Do not use '2.5' too close to obastables (Bad Result)
+
+        if len(sensing_info.track_forward_obstacles) > 0:
+            o_dist, o_to_middle = sensing_info.track_forward_obstacles[0]
+            if o_dist < 50:
+                DISTANCE_TO_MOVE = (abs(o_to_middle) + thresh_dist) / 3 
+                if o_to_middle < -1:
+                    baseline = o_to_middle + DISTANCE_TO_MOVE
+                elif o_to_middle > 1:
+                    baseline = o_to_middle - DISTANCE_TO_MOVE
+                else:
+                    # Obstacles near the centerline move according to "my car position"
+                    if sensing_info.to_middle >= 0:
+                        baseline = o_to_middle + DISTANCE_TO_MOVE
+                    else:
+                        baseline = o_to_middle - DISTANCE_TO_MOVE
+                      
+                # Do not use 'thresh_left/thresh_right' for (Bad Result)
+                thresh_left = o_to_middle - DISTANCE_TO_AVOID
+                thresh_right = o_to_middle + DISTANCE_TO_AVOID                
+                baseline_info.append(baseline)
+                baseline_info.append(thresh_left)
+                baseline_info.append(thresh_right)
+
+        return baseline_info
+                    
+    # =========================================================== #
+    # Reward Function
+    # =========================================================== #
+    def compute_reward(self, sensing_info):
+        # =========================================================== #
+        # Area for writing code
+        # =========================================================== #
+        
+        thresh_dist = self.half_road_limit  # 4 wheels off the track
+        dist = abs(sensing_info.to_middle)
+        DISTANCE_DECAY_RATE = 1.2        # The rate at which the reward decays for the distance function
+
+        # [Obstacles]
+        baseline_info = self.get_baseline(sensing_info) 
+
+        # [Speed]
+        CENTER_SPEED_REWARD = self.compute_speed_reward(sensing_info)
 
         if dist > thresh_dist:
             reward = -1
         elif sensing_info.collided:
             reward = -1
-        elif avoid_o_to_middle < 2.5:
-            reward = -0.5   # -1 �? 주면 frozen ?�인?�듯
-        # elif max_change_value < 15 and sensing_info.speed > 40:
-        #     reward = 0.8        
+        elif len(baseline_info) > 0:
+            baseline = baseline_info[0] 
+            # thresh_left = baseline_info[1]
+            # thresh_right = baseline_info[2]
+
+            # if sensing_info.to_middle > thresh_left and sensing_info.to_middle < thresh_right:
+            #     reward = 0
+            # else:
+            reward = math.exp(-(abs(sensing_info.to_middle - baseline) * DISTANCE_DECAY_RATE))
+                # print("baseline:", abs(sensing_info.to_middle - baseline), "calc:", abs(sensing_info.to_middle - baseline) * DISTANCE_DECAY_RATE)
+            
+            print("[Reward] ", round(reward,3), "dist: ", round(sensing_info.to_middle, 2), ", [base]", round(baseline, 2), "L:", round(thresh_left,2), "R:", round(thresh_right, 2))
         else:
-            if dist > 5:
-                reward = 0.1
-            elif dist > 4:
-                reward = 0.2
-            elif dist > 3:
-                reward = 0.4 + up_speed_reward
-            elif dist > 2:
-                reward = 0.6 + up_speed_reward
-            elif dist > 1:
-                reward = 0.8 + down_speed_reward + up_speed_reward
-            else:
-                reward = 1 + down_speed_reward*2 + up_speed_reward*2
+            reward = math.exp(-(dist * DISTANCE_DECAY_RATE)) + CENTER_SPEED_REWARD
+            print("[Reward] ", round(reward,3), ", dist: ", round(dist, 2), ", down_speed_reward:", CENTER_SPEED_REWARD)
 
         #
         # Editing area ends
