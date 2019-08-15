@@ -296,9 +296,9 @@ class AirSimBaseEnv:
             track_angle.append(round(angle))
         return track_angle
 
-        # ============================
-        # 트랙 전방 도로의 장애물 정보를 보여준다. 10개 구간(100m)
-        # ============================
+    # ============================
+    # 트랙 전방 도로의 장애물 정보를 보여준다. 10개 구간(100m)
+    # ============================
 
     def get_track_forward_obstacle(self, car_state, way_points, check_point, all_obstacles):
         # 장애물 사이즈
@@ -329,6 +329,7 @@ class AirSimBaseEnv:
                     dist = round(x * way_point_unit + car_dist_to_next + obs[2], 5)
                     track_obstacles.append((dist, round(obs[3], 5)))
 
+        track_obstacles = sorted(track_obstacles, key=lambda obs: obs[0])
         return track_obstacles
 
     def get_distance_to_way_points(self, car_state, way_points, check_point):

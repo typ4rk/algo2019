@@ -90,9 +90,9 @@ class DQNCustomClient(DQNClient):
         tfo = sensing_info.track_forward_obstacles
 
         for o_dist, o_center_dist in tfo:
-            min_dist = max(SPPED_DIST_RATE*speed, 1.0)
+            min_dist = max(SPEED_DIST_RATE*speed, 1.0)
             danger_o_dist = CAR_OBSTACLE_MIN_DIST - (CAR_OBSTACLE_MIN_DIST*o_dist/min_dist)
-            if abs(sensing_info.to_midle - o_center_dist) < danger_o_dist:
+            if abs(sensing_info.to_middle - o_center_dist) < danger_o_dist:
                 reward_value -= 1.0
                 break
 
@@ -141,14 +141,20 @@ class DQNCustomClient(DQNClient):
         # =========================================================== #
         # Editing area starts from here
         #
-        fc = self.failure_condition(sensing_info) * 1.5
-        speed_reward_value = self.calc_speed_reward_value(sensing_info) * 0.1
-        dist_reward_value = self.calc_dist_reward_value(sensing_info) * 0.7
-        angle_reward_value = self.calc_angle_reward_value(sensing_info) * 0.2
+        fc = self.failure_condition(sensing_info) * 4.0
+        dist_reward_value = self.calc_dist_reward_value(sensing_info)
+        angle_reward_value = 0
+        speed_reward_value = 0
+
+        if 0.5 < dist_reward_value:
+            angle_reward_value = self.calc_angle_reward_value(sensing_info)
+
+        if 1.0 < dist_reward_value + angle_reward_value:
+            speed_reward_value = self.calc_speed_reward_value(sensing_info)
 
         reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
 
-        print(f"lap_progress: {sensing_info.lap_progress} s:{speed_reward_value:0.3f} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
