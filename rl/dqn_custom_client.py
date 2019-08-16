@@ -57,6 +57,8 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
+            dict(throttle=0.6, steering=0.3),
+            dict(throttle=0.6, steering=-0.3),
             dict(throttle=0.6, steering=0)
         ]
         #
@@ -84,7 +86,7 @@ class DQNCustomClient(DQNClient):
 
         CAR_OBSTACLE_MIN_DIST = (OBSTACLE_WIDTH + CAR_WIDTH)/2.00
 
-        SPEED_DIST_RATE = 30.0/30.0 # 30km/h 일 때 0m
+        SPEED_DIST_RATE = 30.0/30.0 # 30km/h 일 때30m
 
         speed = sensing_info.speed
         tfo = sensing_info.track_forward_obstacles
