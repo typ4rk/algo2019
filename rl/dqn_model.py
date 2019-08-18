@@ -267,6 +267,10 @@ class DQNClient:
         current_episode = 0
         scores_per_episode = []
         frozen = 0
+        max_score = 0
+        score_updated = False
+        best_episode = 0
+
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
@@ -324,7 +328,7 @@ class DQNClient:
             scores_per_episode.append(reward)
 
             if is_debug:
-                print("### cur_state", agent_current_state, ",action:", action, ",reward:", reward, ",next_stat:",
+                print("### cur_state", agent_current_state, ",action:", action, ",reward:", reward, "next_stat:",
                       agent_next_state, done)
 
             # 리플레이 메모리에 샘플 <s, a, r, s'> 저장
@@ -351,7 +355,14 @@ class DQNClient:
                 if len(episodes) % graph_x_width == 0:
                     pylab.clf()
 
+                if score > max_score:
+                    max_score = score
+                    score_updated = True
+                    self.agent.model.save_weights(
+                        "./save_model/best_weights.h5")
+
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
+                      " (max:", round(max_score,1), ", episode: ", best_episode, ")",
                       "  memory length:",
                       len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
                       check_point_index)
@@ -359,6 +370,9 @@ class DQNClient:
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
                         "./save_model/" + str(self.run_cid) + "/dqn_weight_" + str(current_episode) + ".h5")
+                    if score_updated == True:
+                        best_episode = current_episode
+                        score_updated = False
 
                 # 모델 업데이트
                 self.agent.update_target_model()
