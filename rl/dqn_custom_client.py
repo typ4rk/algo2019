@@ -18,7 +18,7 @@ training_duration = 0
 # =========================================================== #
 model_load = True
 #model_weight_path = "./save_model/.../dqn_weight_00.h5"
-model_weight_path = "./save_model/best_weights.h5"
+model_weight_path = "./save_model/best_weight.h5"
 
 
 # ===========================================================

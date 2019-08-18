@@ -358,8 +358,9 @@ class DQNClient:
                 if score > max_score:
                     max_score = score
                     score_updated = True
-                    self.agent.model.save_weights(
-                        "./save_model/best_weights.h5")
+                    self.agent.model.save_weights("./save_model/best_weight.h5")
+                    self.agent.model.save_weights("./save_model/best_weight_"
+                            + str("{:0.3f}").format(max_score) + "_" + str("{:0.3f}").format(progress) + ".h5")
 
                 print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
                       " (max:", round(max_score,1), ", episode: ", best_episode, ")",
