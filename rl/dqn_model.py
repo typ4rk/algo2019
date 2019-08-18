@@ -269,18 +269,16 @@ class DQNClient:
         frozen = 0
         
         # 보상 최대값 저장
-        max_score = 0
-        save_episode = 0
-        save_mean = 0
-        save_lap_progress = 0
+        max_score = 0.0
+        max_score_episode = 0
+        max_score_mean = 0.0
+        max_score_progress = 0
 
-        # 평균 보상값 저장 (lap_progress 거리 기준)
-        mean_per_progress = 0        
-        max_mean = 0
-        save_episode2 = 0
-        save_score = 0
-        save_lap_progress2 = 0
-
+        max_lap_score = 0.0
+        max_lap_episode = 0
+        max_lap_mean = 0.0
+        max_lap_progress = 0
+        
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
         half_complete_flag = False
@@ -371,22 +369,21 @@ class DQNClient:
                 # 최대 보상값 저장                
                 if score > max_score:
                     max_score = score
-                    save_episode = current_episode
-                    save_mean = mean_per_progress
-                    save_lap_progress = sensing_info.lap_progress
+                    max_score_episode = current_episode
+                    max_score_mean = mean_per_progress
+                    max_score_progress = sensing_info.lap_progress
                 
-                # 최대 평균보상값 저장
-                if mean_per_progress > max_mean and sensing_info.lap_progress > 10:
-                    max_mean = mean_per_progress                    
-                    save_score = score
-                    save_episode2 = current_episode
-                    save_lap_progress2 = sensing_info.lap_progress
+                if sensing_info.lap_progress > max_lap_progress:
+                    max_lap_score = score
+                    max_lap_episode = current_episode
+                    max_lap_mean = mean_per_progress
+                    max_lap_progress = sensing_info.lap_progress
 
-                print("episode:", current_episode, " score:", round(score,1), " check point reached:", check_point_index,
+                print("episode:", current_episode, " score:", round(score,2), " check point reached:", check_point_index,
                     " lap:", sensing_info.lap_progress,
-                    "[score] ", round(max_score,1), "/", save_lap_progress, "% (=", save_mean, "), episode:", save_episode)
-                    #" vs. ",
-                    #"[mean]", round(save_score,1), "/", save_lap_progress2, "% (=", max_mean, "), episode:", save_episode2)
+                    "[score] ", round(max_score,2), "/", max_score_progress, "% (=", max_score_mean, "), episode:", max_score_episode,
+                    " vs. ",
+                    "[lap]", round(max_lap_score,2), "/", max_lap_progress, "% (=", max_lap_mean, "), episode:", max_lap_episode)
 
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
