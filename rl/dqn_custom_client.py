@@ -60,7 +60,7 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.6, steering=0)
+            dict(throttle=0.9, steering=0)
         ]
         #
         # Editing area ends
@@ -79,7 +79,9 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
+        # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
+        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
+        # reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -98,7 +100,6 @@ class DQNCustomClient(DQNClient):
             if abs(sensing_info.to_middle - o_center_dist) < danger_o_dist:
                 reward_value -= 1.0
                 break
-
 
         return reward_value
 
@@ -134,6 +135,20 @@ class DQNCustomClient(DQNClient):
 
         return abs(reward_value)
 
+    def calc_thresh_angle_reward(self, sensing_info):
+        ANGLE_REWARD = 0
+        TRACK_OUTLINE = 10
+        DISTANCE_DECAY_RATE = 0.8
+        dist_to_outline = abs(sensing_info.to_middle) - TRACK_OUTLINE
+
+        RIGHT_AVOID_ANGLE = sensing_info.to_middle > 5 and sensing_info.moving_angle > 0
+        LEFT_AVOID_ANGLE = sensing_info.to_middle < -5 and sensing_info.moving_angle < 0
+        if RIGHT_AVOID_ANGLE or LEFT_AVOID_ANGLE:
+            ANGLE_REWARD = math.exp(-(abs(dist_to_outline) * DISTANCE_DECAY_RATE))
+
+        return (round(ANGLE_REWARD,1) * -1)
+
+
     # =========================================================== #
     # Reward Function
     # =========================================================== #
@@ -146,6 +161,7 @@ class DQNCustomClient(DQNClient):
         #
         fc = self.failure_condition(sensing_info) * 4.0
         dist_reward_value = self.calc_dist_reward_value(sensing_info)
+        thresh_reward_value = self.calc_thresh_angle_reward(sensing_info)
         angle_reward_value = 0
         speed_reward_value = 0
 
@@ -155,9 +171,9 @@ class DQNCustomClient(DQNClient):
         if 1.0 < dist_reward_value + angle_reward_value:
             speed_reward_value = self.calc_speed_reward_value(sensing_info)
 
-        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
+        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f} {self.sensing_info.to_middle:0.3f} {sensing_info.collided}")
+        print(f"[Reward]{reward:0.3f} [to_middle]{round(self.sensing_info.to_middle,2)}, D:{dist_reward_value:0.3f} [angle]track:{self.sensing_info.track_forward_angles[0]} A:{angle_reward_value:0.3f} T:{thresh_reward_value:0.3f} [etc]S:{speed_reward_value:0.3f}")
         #
         # Editing area ends
         # ==========================================================#

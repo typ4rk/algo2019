@@ -1,4 +1,4 @@
-import setup_path
+﻿import setup_path
 import airsim
 import os
 import time
@@ -362,11 +362,8 @@ class DQNClient:
                     self.agent.model.save_weights("./save_model/best_weight_"
                             + str("{:0.3f}").format(max_score) + "_" + str("{:0.3f}").format(progress) + ".h5")
 
-                print("Num of steps done :", current_episode, "episode:", current_episode, "  score:", score,
-                      " (max:", round(max_score,1), ", episode: ", best_episode, ")",
-                      "  memory length:",
-                      len(self.agent.memory), "  epsilon:", self.agent.epsilon, " check point reached:",
-                      check_point_index)
+                print("== episode:", current_episode, "score:", round(score,1), "check point reached:", check_point_index,
+                      " [max]", round(max_score,1), ", episode: ", best_episode)
 
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
@@ -382,8 +379,8 @@ class DQNClient:
                 time.sleep(0.2)
 #                self.client.setResetLocation(335.96, - 74.21, -51.82)
 #                check_point_index = 38 #3번
-                self.client.setResetLocation(16.55, - 1073.64, 135.76) #4번
-                check_point_index = 224 #4번
+                # self.client.setResetLocation(16.55, - 1073.64, 135.76) #4번
+                # check_point_index = 224 #4번
 #                self.client.setResetLocation(-205.93,  -522.15, 102.12) #5번
 #                check_point_index = 302 #5번
 
@@ -392,7 +389,7 @@ class DQNClient:
                 # 변수들 초기화
                 car_next_state = self.client.getCarState(self.player_name)
                 backed_car_state = self.client.getCarState(self.player_name)
-                #check_point_index = 0
+                check_point_index = 0
                 scores_per_episode = []
                 cur_lab = 1
                 half_complete_flag = False
