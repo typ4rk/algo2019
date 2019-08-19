@@ -79,7 +79,7 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        reward_value = math.exp(-abs(sensing_info.to_middle)*1.2)
+        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -157,7 +157,7 @@ class DQNCustomClient(DQNClient):
 
         reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f} {self.sensing_info.to_middle:0.3f} {sensing_info.collided}")
         #
         # Editing area ends
         # ==========================================================#

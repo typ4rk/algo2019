@@ -380,12 +380,19 @@ class DQNClient:
 
                 self.client.reset()
                 time.sleep(0.2)
+#                self.client.setResetLocation(335.96, - 74.21, -51.82)
+#                check_point_index = 38 #3번
+                self.client.setResetLocation(16.55, - 1073.64, 135.76) #4번
+                check_point_index = 224 #4번
+#                self.client.setResetLocation(-205.93,  -522.15, 102.12) #5번
+#                check_point_index = 302 #5번
+
                 # 리셋후 조금 주행을 시킨다.
                 self.make_initial_movement(self.car_controls, self.client)
                 # 변수들 초기화
                 car_next_state = self.client.getCarState(self.player_name)
                 backed_car_state = self.client.getCarState(self.player_name)
-                check_point_index = 0
+                #check_point_index = 0
                 scores_per_episode = []
                 cur_lab = 1
                 half_complete_flag = False
