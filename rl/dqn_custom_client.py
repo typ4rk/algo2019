@@ -60,7 +60,7 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.6, steering=0)
+            dict(throttle=0.9, steering=0)
         ]
         #
         # Editing area ends
@@ -114,7 +114,7 @@ class DQNCustomClient(DQNClient):
         tfa = sensing_info.track_forward_angles
         tfa_differences = []
 
-        i = 1;
+        i = 1
         while i < len(tfa):
             tfa_differences.append(tfa[i - 1] - tfa[i])
             i = i + 1
@@ -134,6 +134,19 @@ class DQNCustomClient(DQNClient):
 
         return abs(reward_value)
 
+    def calc_thresh_angle_reward(self, sensing_info):
+        ANGLE_REWARD = 0
+        TRACK_OUTLINE = 10
+        DISTANCE_DECAY_RATE = 0.8
+        dist_to_outline = abs(sensing_info.to_middle) - TRACK_OUTLINE
+
+        RIGHT_AVOID_ANGLE = sensing_info.to_middle > 5 and sensing_info.moving_angle > 0
+        LEFT_AVOID_ANGLE = sensing_info.to_middle < -5 and sensing_info.moving_angle < 0
+        if RIGHT_AVOID_ANGLE == True or LEFT_AVOID_ANGLE == True:
+            ANGLE_REWARD = math.exp(-(abs(dist_to_outline) * DISTANCE_DECAY_RATE))
+
+        return (round(ANGLE_REWARD,1) * -1)
+
     # =========================================================== #
     # Reward Function
     # =========================================================== #
@@ -146,8 +159,9 @@ class DQNCustomClient(DQNClient):
         #
         fc = self.failure_condition(sensing_info) * 4.0
         dist_reward_value = self.calc_dist_reward_value(sensing_info)
+        thresh_reward_value = self.calc_thresh_angle_reward(sensing_info)
         angle_reward_value = 0
-        speed_reward_value = 0
+        speed_reward_value = 0        
 
         if 0.5 < dist_reward_value:
             angle_reward_value = self.calc_angle_reward_value(sensing_info)
@@ -155,9 +169,9 @@ class DQNCustomClient(DQNClient):
         if 1.0 < dist_reward_value + angle_reward_value:
             speed_reward_value = self.calc_speed_reward_value(sensing_info)
 
-        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
+        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} t:{thresh_reward_value:0.3f} f:{fc} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
