@@ -2,6 +2,7 @@ import setup_path
 from dqn_model import DQNClient
 from dqn_model import DQNParam
 import math
+import numpy
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras.models import Sequential
@@ -60,18 +61,56 @@ class DQNCustomClient(DQNClient):
             dict(throttle=0.6, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.6, steering=0)
+            dict(throttle=0.9, steering=0)
         ]
         #
         # Editing area ends
         # ==========================================================#
         return actions
 
+    def get_track_forward_angle_differences(self, sensing_info):
+        tfa = sensing_info.track_forward_angles
+        tfa_differences = []
+
+        i = 1
+        while i < len(tfa):
+            tfa_differences.append(tfa[i - 1] - tfa[i])
+            i = i + 1
+
+        return tfa_differences
+
+    def get_guide_line(self, sensing_info):
+        tfa = sensing_info.track_forward_angles
+        tfad = self.get_track_forward_angle_differences(sensing_info)
+        tfad_std = numpy.std(tfad)
+
+        PRED_STARTING_DIST = 4 # 40m
+        PRED_FATHEST_DIST = tfa.length() - 1
+        PRED_RANGE = PRED_FATHEST_DIST - PRED_STARTING_DIST
+        WEIGHT_ON_FATHEST_DIST = 0.1
+        WEIGHT_ON_STARTING_DIST = 1.0
+
+        WEIGHT_DIFF = WEIGHT_ON_STARTING_DIST-WEIGHT_ON_FATHEST_DIST
+        DEC_RATE = WEIGHT_DIFF/PRED_RANGE
+        WEIGHT_ON_0 = WEIGHT_ON_FATHEST_DIST + (WEIGHT_DIFF * PRED_FATHEST_DIST / PRED_RANGE)
+
+        i = PRED_FATHEST_DIST
+
+        guide_line = 0.0
+        while PRED_STARTING_DIST <= i:
+            weight = -DEC_RATE*i + WEIGHT_ON_0
+            cur_guide_line = -min(tfa[i]*weight, 90)*(self.half_road_limit-0.5)/90
+            guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or cur_guide_line < guide_line else guide_line
+            i -= 1
+
+        print(f"tfa[5]: {tfa[5]:0.3f} tfad_std:{tfad_std:0.3f} guide_line:{guide_line:0.3f}")
+
+        return guide_line
+
     def failure_condition(self, sensing_info):
         thresh_dist = self.half_road_limit  # 4 wheels off the track
         dist = abs(sensing_info.to_middle)
-        conds = (thresh_dist < dist
-                , sensing_info.collided);
+        conds = (thresh_dist < dist, sensing_info.collided)
 
         if any(conds):
             return -1.0
@@ -79,7 +118,8 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
+        baseline = self.get_guide_line(sensing_info)
+        reward_value = math.exp(-max(abs(baseline - sensing_info.to_middle)-1.0, 0.0)*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -99,7 +139,6 @@ class DQNCustomClient(DQNClient):
                 reward_value -= 1.0
                 break
 
-
         return reward_value
 
     def calc_speed_reward_value(self, sensing_info):
@@ -112,17 +151,12 @@ class DQNCustomClient(DQNClient):
     def calc_angle_reward_value(self, sensing_info):
         ma = sensing_info.moving_angle
         tfa = sensing_info.track_forward_angles
-        tfa_differences = []
-
-        i = 1;
-        while i < len(tfa):
-            tfa_differences.append(tfa[i - 1] - tfa[i])
-            i = i + 1
+        tfad = self.get_track_forward_angle_differences(sensing_info)
 
         thresh_angle = 20
 
-        max_diff_angle = max(tfa_differences)
-        max_angle_dist = tfa_differences.index(max_diff_angle)
+        max_diff_angle = max(tfad)
+        max_angle_dist = tfad.index(max_diff_angle)
         max_angle = tfa[max_angle_dist];
 
         if max_angle_dist == 0:
@@ -133,6 +167,19 @@ class DQNCustomClient(DQNClient):
             reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
 
         return abs(reward_value)
+
+    def calc_thresh_angle_reward(self, sensing_info):
+        ANGLE_REWARD = 0
+        TRACK_OUTLINE = 10
+        DISTANCE_DECAY_RATE = 0.8
+        dist_to_outline = abs(sensing_info.to_middle) - TRACK_OUTLINE
+
+        RIGHT_AVOID_ANGLE = sensing_info.to_middle > 5 and sensing_info.moving_angle > 0
+        LEFT_AVOID_ANGLE = sensing_info.to_middle < -5 and sensing_info.moving_angle < 0
+        if RIGHT_AVOID_ANGLE == True or LEFT_AVOID_ANGLE == True:
+            ANGLE_REWARD = math.exp(-(abs(dist_to_outline) * DISTANCE_DECAY_RATE))
+
+        return (round(ANGLE_REWARD,1) * -1)
 
     # =========================================================== #
     # Reward Function
@@ -146,6 +193,7 @@ class DQNCustomClient(DQNClient):
         #
         fc = self.failure_condition(sensing_info) * 4.0
         dist_reward_value = self.calc_dist_reward_value(sensing_info)
+        thresh_reward_value = self.calc_thresh_angle_reward(sensing_info)
         angle_reward_value = 0
         speed_reward_value = 0
 
@@ -155,9 +203,9 @@ class DQNCustomClient(DQNClient):
         if 1.0 < dist_reward_value + angle_reward_value:
             speed_reward_value = self.calc_speed_reward_value(sensing_info)
 
-        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc
+        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} f:{fc} = {reward:0.3f} {self.sensing_info.to_middle:0.3f} {sensing_info.collided}")
+        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} t:{thresh_reward_value:0.3f} f:{fc} = {reward:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
