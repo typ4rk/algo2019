@@ -55,13 +55,13 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         actions = [
-            dict(throttle=0.6, steering=0.1),
-            dict(throttle=0.6, steering=-0.1),
-            dict(throttle=0.6, steering=0.2),
-            dict(throttle=0.6, steering=-0.2),
+            dict(throttle=0.8, steering=0.1),
+            dict(throttle=0.8, steering=-0.1),
+            dict(throttle=0.7, steering=0.2),
+            dict(throttle=0.7, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.9, steering=0)
+            dict(throttle=1.0, steering=0)
         ]
         #
         # Editing area ends
@@ -85,7 +85,7 @@ class DQNCustomClient(DQNClient):
         tfad_std = numpy.std(tfad)
 
         PRED_STARTING_DIST = 4 # 40m
-        PRED_FATHEST_DIST = tfa.length() - 1
+        PRED_FATHEST_DIST = len(tfa) - 1
         PRED_RANGE = PRED_FATHEST_DIST - PRED_STARTING_DIST
         WEIGHT_ON_FATHEST_DIST = 0.1
         WEIGHT_ON_STARTING_DIST = 1.0
@@ -100,7 +100,7 @@ class DQNCustomClient(DQNClient):
         while PRED_STARTING_DIST <= i:
             weight = -DEC_RATE*i + WEIGHT_ON_0
             cur_guide_line = -min(tfa[i]*weight, 90)*(self.half_road_limit-0.5)/90
-            guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or cur_guide_line < guide_line else guide_line
+            guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or guide_line < cur_guide_line else guide_line
             i -= 1
 
         print(f"tfa[5]: {tfa[5]:0.3f} tfad_std:{tfad_std:0.3f} guide_line:{guide_line:0.3f}")
