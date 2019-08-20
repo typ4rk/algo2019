@@ -54,12 +54,12 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         actions = [
-            dict(throttle=0.8, steering=0.1),
-            dict(throttle=0.8, steering=-0.1),
-            dict(throttle=0.6, steering=0.2),
-            dict(throttle=0.6, steering=-0.2),
-            dict(throttle=0.6, steering=0.3),
-            dict(throttle=0.6, steering=-0.3),
+            dict(throttle=0.85, steering=0.1),
+            dict(throttle=0.85, steering=-0.1),
+            dict(throttle=0.73, steering=0.2),
+            dict(throttle=0.73, steering=-0.2),
+            dict(throttle=0.65, steering=0.3),
+            dict(throttle=0.65, steering=-0.3),
             dict(throttle=1.0, steering=0)
         ]
         #
