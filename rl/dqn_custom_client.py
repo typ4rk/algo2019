@@ -79,7 +79,9 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
+        # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
+        # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
+        reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -99,7 +101,6 @@ class DQNCustomClient(DQNClient):
                 reward_value -= 1.0
                 break
 
-
         return reward_value
 
     def calc_speed_reward_value(self, sensing_info):
@@ -114,23 +115,43 @@ class DQNCustomClient(DQNClient):
         tfa = sensing_info.track_forward_angles
         tfa_differences = []
 
-        i = 1
-        while i < len(tfa):
-            tfa_differences.append(tfa[i - 1] - tfa[i])
-            i = i + 1
-
+        # first_curve_dist = 0
+        # first_curve_angle = 0
         thresh_angle = 20
 
-        max_diff_angle = max(tfa_differences)
-        max_angle_dist = tfa_differences.index(max_diff_angle)
-        max_angle = tfa[max_angle_dist];
+        i = 1
+        while i < len(tfa):
+            # diff_angle = tfa[i] - tfa[i-1]
+            # tfa_differences.append(abs(diff_angle))
+            # if first_curve_angle == 0 and abs(diff_angle) > thresh_angle:
+            #     first_curve_dist = i - 1
+            #     first_curve_angle = diff_angle
+            tfa_differences.append(abs(tfa[i] - tfa[i-1]))
+            i = i + 1
 
-        if max_angle_dist == 0:
-            reward_value = 1.0
-        elif 1 <= max_angle_dist < 3:
-            reward_value = 1.0 - (max_angle - ma)/thresh_angle
+        max_diff_angle = max(tfa_differences)
+        max_angle_dist = tfa_differences.index(max_diff_angle)        
+        max_angle = tfa[max_angle_dist]
+
+        i = max_angle_dist
+        if tfa[i + 1] - tfa[i] < 0:
+            max_angle = max_angle * -1
+
+        reward_value = 0
+
+        if max_diff_angle < 5:
+            reward_value = round(math.exp(-max(abs(ma) - 3, 0)), 2)
         else:
-            reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
+            if max_angle_dist == 0:
+                reward_value = 1.0
+            # elif 1 <= first_curve_dist < 3:
+            #     reward_value = 1.0 - min(abs(first_curve_angle - ma), thresh_angle)/thresh_angle
+            elif 1 <= max_angle_dist < 3:
+                reward_value = 1.0 - min(abs(max_angle - ma), thresh_angle)/thresh_angle
+                # reward_value = 1.0 - abs(max_angle - ma)/thresh_angle
+            else:
+                reward_value = 1.0 - min(abs(tfa[0] - ma), thresh_angle)/thresh_angle
+                # reward_value = 1.0 - abs(tfa[0] - ma)/thresh_angle
 
         return abs(reward_value)
 
@@ -142,10 +163,11 @@ class DQNCustomClient(DQNClient):
 
         RIGHT_AVOID_ANGLE = sensing_info.to_middle > 5 and sensing_info.moving_angle > 0
         LEFT_AVOID_ANGLE = sensing_info.to_middle < -5 and sensing_info.moving_angle < 0
-        if RIGHT_AVOID_ANGLE == True or LEFT_AVOID_ANGLE == True:
+        if RIGHT_AVOID_ANGLE or LEFT_AVOID_ANGLE:
             ANGLE_REWARD = math.exp(-(abs(dist_to_outline) * DISTANCE_DECAY_RATE))
 
         return (round(ANGLE_REWARD,1) * -1)
+
 
     # =========================================================== #
     # Reward Function
@@ -161,7 +183,7 @@ class DQNCustomClient(DQNClient):
         dist_reward_value = self.calc_dist_reward_value(sensing_info)
         thresh_reward_value = self.calc_thresh_angle_reward(sensing_info)
         angle_reward_value = 0
-        speed_reward_value = 0        
+        speed_reward_value = 0
 
         if 0.5 < dist_reward_value:
             angle_reward_value = self.calc_angle_reward_value(sensing_info)
@@ -171,9 +193,10 @@ class DQNCustomClient(DQNClient):
 
         reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
 
+        # print(f"[Reward]{reward:0.3f} [to_middle]{round(self.sensing_info.to_middle,2)}, D:{dist_reward_value:0.3f} [angle]track:{self.sensing_info.track_forward_angles[0]} A:{angle_reward_value:0.3f} T:{thresh_reward_value:0.3f} [etc]S:{speed_reward_value:0.3f}")
         print(f"[Reward]{reward:0.3f} [to_middle]{round(self.sensing_info.to_middle,2)}, D:{dist_reward_value:0.3f} \
             [angle]track:{self.sensing_info.track_forward_angles[0]} angle:{self.sensing_info.moving_angle} A:{angle_reward_value:0.3f} T:{thresh_reward_value:0.3f} \
-            [etc]speed:{self.sensing_info.speed} S:{speed_reward_value:0.3f}")
+            [etc]speed:{self.sensing_info.speed} S:{speed_reward_value:0.3f}")        
         #
         # Editing area ends
         # ==========================================================#
