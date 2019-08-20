@@ -54,13 +54,13 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         actions = [
-            dict(throttle=0.6, steering=0.1),
-            dict(throttle=0.6, steering=-0.1),
+            dict(throttle=0.8, steering=0.1),
+            dict(throttle=0.8, steering=-0.1),
             dict(throttle=0.6, steering=0.2),
             dict(throttle=0.6, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
             dict(throttle=0.6, steering=-0.3),
-            dict(throttle=0.9, steering=0)
+            dict(throttle=1.0, steering=0)
         ]
         #
         # Editing area ends
@@ -79,7 +79,7 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        reward_value = math.exp(-abs(sensing_info.to_middle)*1.2)
+        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -171,7 +171,9 @@ class DQNCustomClient(DQNClient):
 
         reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} t:{thresh_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        print(f"[Reward]{reward:0.3f} [to_middle]{round(self.sensing_info.to_middle,2)}, D:{dist_reward_value:0.3f} \
+            [angle]track:{self.sensing_info.track_forward_angles[0]} angle:{self.sensing_info.moving_angle} A:{angle_reward_value:0.3f} T:{thresh_reward_value:0.3f} \
+            [etc]speed:{self.sensing_info.speed} S:{speed_reward_value:0.3f}")
         #
         # Editing area ends
         # ==========================================================#
