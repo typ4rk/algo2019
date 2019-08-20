@@ -84,7 +84,7 @@ class DQNCustomClient(DQNClient):
         tfad = self.get_track_forward_angle_differences(sensing_info)
         tfad_std = numpy.std(tfad)
 
-        PRED_STARTING_DIST = 4 # 40m
+        PRED_STARTING_DIST = 5 # 50m
         PRED_FATHEST_DIST = len(tfa) - 1
         PRED_RANGE = PRED_FATHEST_DIST - PRED_STARTING_DIST
         WEIGHT_ON_FATHEST_DIST = 0.1
@@ -99,7 +99,7 @@ class DQNCustomClient(DQNClient):
         guide_line = 0.0
         while PRED_STARTING_DIST <= i:
             weight = -DEC_RATE*i + WEIGHT_ON_0
-            cur_guide_line = -min(tfa[i]*weight, 90)*(self.half_road_limit-0.5)/90
+            cur_guide_line = -min(tfa[i]*weight, 90)*(self.half_road_limit-2.0)/90
             guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or guide_line < cur_guide_line else guide_line
             i -= 1
 
