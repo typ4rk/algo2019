@@ -80,8 +80,8 @@ class DQNCustomClient(DQNClient):
 
     def calc_dist_reward_value(self, sensing_info):
         # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
-        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
-        # reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
+        # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
+        reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -115,23 +115,43 @@ class DQNCustomClient(DQNClient):
         tfa = sensing_info.track_forward_angles
         tfa_differences = []
 
-        i = 1;
-        while i < len(tfa):
-            tfa_differences.append(tfa[i - 1] - tfa[i])
-            i = i + 1
-
+        # first_curve_dist = 0
+        # first_curve_angle = 0
         thresh_angle = 20
 
-        max_diff_angle = max(tfa_differences)
-        max_angle_dist = tfa_differences.index(max_diff_angle)
-        max_angle = tfa[max_angle_dist];
+        i = 1
+        while i < len(tfa):
+            # diff_angle = tfa[i] - tfa[i-1]
+            # tfa_differences.append(abs(diff_angle))
+            # if first_curve_angle == 0 and abs(diff_angle) > thresh_angle:
+            #     first_curve_dist = i - 1
+            #     first_curve_angle = diff_angle
+            tfa_differences.append(abs(tfa[i] - tfa[i-1]))
+            i = i + 1
 
-        if max_angle_dist == 0:
-            reward_value = 1.0
-        elif 1 <= max_angle_dist < 3:
-            reward_value = 1.0 - (max_angle - ma)/thresh_angle
+        max_diff_angle = max(tfa_differences)
+        max_angle_dist = tfa_differences.index(max_diff_angle)        
+        max_angle = tfa[max_angle_dist]
+
+        i = max_angle_dist
+        if tfa[i + 1] - tfa[i] < 0:
+            max_angle = max_angle * -1
+
+        reward_value = 0
+
+        if max_diff_angle < 5:
+            reward_value = round(math.exp(-max(abs(ma) - 3, 0)), 2)
         else:
-            reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
+            if max_angle_dist == 0:
+                reward_value = 1.0
+            # elif 1 <= first_curve_dist < 3:
+            #     reward_value = 1.0 - min(abs(first_curve_angle - ma), thresh_angle)/thresh_angle
+            elif 1 <= max_angle_dist < 3:
+                reward_value = 1.0 - min(abs(max_angle - ma), thresh_angle)/thresh_angle
+                # reward_value = 1.0 - abs(max_angle - ma)/thresh_angle
+            else:
+                reward_value = 1.0 - min(abs(tfa[0] - ma), thresh_angle)/thresh_angle
+                # reward_value = 1.0 - abs(tfa[0] - ma)/thresh_angle
 
         return abs(reward_value)
 

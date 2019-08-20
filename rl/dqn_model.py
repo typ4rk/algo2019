@@ -6,6 +6,7 @@ import math
 import pylab
 import random
 import numpy as np
+import time
 from collections import deque
 from keras.layers import Dense
 from keras.optimizers import Adam
@@ -270,6 +271,8 @@ class DQNClient:
         max_score = 0
         score_updated = False
         best_episode = 0
+        start_time = time.time()
+        end_time = start_time
 
         # print("agent_current_state:{}".format(car_current_state))
         cur_lab = 1
@@ -362,8 +365,12 @@ class DQNClient:
                     self.agent.model.save_weights("./save_model/best_weight_"
                             + str("{:0.3f}").format(max_score) + "_" + str("{:0.3f}").format(progress) + ".h5")
 
+                end_time = time.time()
+
                 print("== episode:", current_episode, "score:", round(score,1), "check point reached:", check_point_index,
-                      " [max]", round(max_score,1), ", episode: ", best_episode)
+                      " [max]", round(max_score,1), ", episode:", best_episode, "time:", end_time - start_time)
+                
+                start_time = time.time()
 
                 if current_episode % 10 == 0:
                     self.agent.model.save_weights(
