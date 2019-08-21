@@ -380,8 +380,12 @@ class DQNClient:
 
                 self.client.reset()
                 time.sleep(0.2)
-#                self.client.setResetLocation(335.96, - 74.21, -51.82)
-#                check_point_index = 38 #3번
+#                self.client.setResetLocation(335.96, - 74.21, -51.82) #1번
+#                check_point_index = 38 #1번
+#                self.client.setResetLocation(184.70, - 163.81, 167.95) #2번
+#                check_point_index = 71 #2번
+#                self.client.setResetLocation(39.66, - 625.08, - 79.56) #3번
+#                check_point_index = 140 #3번
 #                self.client.setResetLocation(16.55, - 1073.64, 135.76) #4번
 #                check_point_index = 224 #4번
 #                self.client.setResetLocation(-205.93,  -522.15, 102.12) #5번

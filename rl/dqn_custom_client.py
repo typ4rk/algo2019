@@ -55,8 +55,8 @@ class DQNCustomClient(DQNClient):
         # Editing area starts from here
         #
         actions = [
-            dict(throttle=0.8, steering=0.1),
-            dict(throttle=0.8, steering=-0.1),
+            dict(throttle=0.9, steering=0.1),
+            dict(throttle=0.9, steering=-0.1),
             dict(throttle=0.7, steering=0.2),
             dict(throttle=0.7, steering=-0.2),
             dict(throttle=0.6, steering=0.3),
@@ -84,26 +84,28 @@ class DQNCustomClient(DQNClient):
         tfad = self.get_track_forward_angle_differences(sensing_info)
         tfad_std = numpy.std(tfad)
 
-        PRED_STARTING_DIST = 5 # 50m
+        PRED_STARTING_DIST = 6 # 60m
         PRED_FATHEST_DIST = len(tfa) - 1
-        PRED_RANGE = PRED_FATHEST_DIST - PRED_STARTING_DIST
-        WEIGHT_ON_FATHEST_DIST = 0.1
+        PRED_DIST_DIFF = PRED_FATHEST_DIST - PRED_STARTING_DIST
         WEIGHT_ON_STARTING_DIST = 1.0
+        WEIGHT_ON_FATHEST_DIST = 0.1
 
-        WEIGHT_DIFF = WEIGHT_ON_STARTING_DIST-WEIGHT_ON_FATHEST_DIST
-        DEC_RATE = WEIGHT_DIFF/PRED_RANGE
-        WEIGHT_ON_0 = WEIGHT_ON_FATHEST_DIST + (WEIGHT_DIFF * PRED_FATHEST_DIST / PRED_RANGE)
+        WEIGHT_DIFF = WEIGHT_ON_FATHEST_DIST - WEIGHT_ON_STARTING_DIST
+        DEC_RATE = float(WEIGHT_DIFF)/float(PRED_DIST_DIFF)
+        WEIGHT_ON_0 = -DEC_RATE * PRED_FATHEST_DIST + WEIGHT_ON_FATHEST_DIST
 
         i = PRED_FATHEST_DIST
 
         guide_line = 0.0
+        gls = []
         while PRED_STARTING_DIST <= i:
-            weight = -DEC_RATE*i + WEIGHT_ON_0
+            weight = DEC_RATE*i + WEIGHT_ON_0
             cur_guide_line = -min(tfa[i]*weight, 90)*(self.half_road_limit-2.0)/90
-            guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or guide_line < cur_guide_line else guide_line
+            gls.append(cur_guide_line)
+            guide_line = cur_guide_line if cur_guide_line*guide_line < 0 or abs(guide_line) < abs(cur_guide_line) else guide_line
             i -= 1
 
-        print(f"tfa[5]: {tfa[5]:0.3f} tfad_std:{tfad_std:0.3f} guide_line:{guide_line:0.3f}")
+        print(f"tfa[{PRED_STARTING_DIST}]: {tfa[PRED_STARTING_DIST]:-3} tfad_std:{tfad_std:-2.2f} guide_line:{guide_line:-2.2f}")
 
         return guide_line
 
@@ -119,7 +121,8 @@ class DQNCustomClient(DQNClient):
 
     def calc_dist_reward_value(self, sensing_info):
         baseline = self.get_guide_line(sensing_info)
-        reward_value = math.exp(-max(abs(baseline - sensing_info.to_middle)-1.0, 0.0)*1.2)
+        compensate = sensing_info.lap_progress * 2.5/40
+        reward_value = math.exp(-max(abs(baseline - sensing_info.to_middle)-compensate, 0.0)*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00
@@ -155,16 +158,17 @@ class DQNCustomClient(DQNClient):
 
         thresh_angle = 20
 
-        max_diff_angle = max(tfad)
-        max_angle_dist = tfad.index(max_diff_angle)
+        abs_diff_angles = [abs(angle) for angle in tfad]
+        max_diff_angle = max(abs_diff_angles)
+        max_angle_dist = abs_diff_angles.index(max_diff_angle)
         max_angle = tfa[max_angle_dist];
 
         if max_angle_dist == 0:
             reward_value = 1.0
         elif 1 <= max_angle_dist < 3:
-            reward_value = 1.0 - (max_angle - ma)/thresh_angle
+            reward_value = 1.0 - min(abs(max_angle - ma), thresh_angle)/thresh_angle
         else:
-            reward_value = 1.0 - (tfa[0] - ma)/thresh_angle
+            reward_value = 1.0 - min(abs(tfa[0] - ma), thresh_angle)/thresh_angle
 
         return abs(reward_value)
 
@@ -203,9 +207,9 @@ class DQNCustomClient(DQNClient):
         if 1.0 < dist_reward_value + angle_reward_value:
             speed_reward_value = self.calc_speed_reward_value(sensing_info)
 
-        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc + thresh_reward_value
+        reward = speed_reward_value + dist_reward_value + angle_reward_value + fc# + thresh_reward_value
 
-        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:0.3f} a:{angle_reward_value:0.3f} s:{speed_reward_value:0.3f} t:{thresh_reward_value:0.3f} f:{fc} = {reward:0.3f}")
+        print(f"lap_progress: {sensing_info.lap_progress} d:{dist_reward_value:-2.2f} a:{angle_reward_value:-2.2f} s:{speed_reward_value:-2.2f} t:{thresh_reward_value:-2.2f} f:{fc} = {reward:-2.2f} {sensing_info.to_middle:-2.2f}")
         #
         # Editing area ends
         # ==========================================================#
