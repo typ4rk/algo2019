@@ -79,9 +79,9 @@ class DQNCustomClient(DQNClient):
         return 0.0
 
     def calc_dist_reward_value(self, sensing_info):
-        # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
+        reward_value = math.exp(-(max(abs(sensing_info.to_middle)-2.0, 0.0))*1.2)
         # reward_value = math.exp(-(max(abs(sensing_info.to_middle)-1.0, 0.0))*1.2)
-        reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
+        # reward_value = math.exp(-(abs(sensing_info.to_middle))*1.2)
 
         MARGIN = 0.15
         OBSTACLE_WIDTH = 2.00

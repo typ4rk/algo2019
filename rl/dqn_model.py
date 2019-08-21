@@ -365,7 +365,7 @@ class DQNClient:
                     score_updated = True
                     self.agent.model.save_weights("./save_model/best_weight.h5")
                     self.agent.model.save_weights("./save_model/best_weight_"
-                            + str("{:0.3f}").format(max_score) + "_" + str("{:0.3f}").format(progress) + "_" + str("{:0.3f}").format(lap_time) + ".h5")
+                            + str("{:0.3f}").format(max_score) + "_" + str("{:0.3f}").format(progress) + "_" + str("{:0.1f}").format(lap_time) + ".h5")
 
                 print("== episode:", current_episode, "score:", round(score,1), "check point reached:", check_point_index,
                       " [max]", round(max_score,1), ", episode:", best_episode, "time:", lap_time)
